@@ -1,0 +1,6 @@
+{
+  "name": "macOS Web Desktop",
+  "description": "A polished macOS desktop reproduction built with React, Tailwind CSS, and Framer Motion.",
+  "requestFramePermissions": [],
+  "majorCapabilities": []
+}
