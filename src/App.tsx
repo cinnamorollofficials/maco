@@ -64,6 +64,46 @@ const WALLPAPERS = [
   { name: "Autumn Forest", url: "https://images.unsplash.com/photo-1441974231531-c6227db76b6e?q=80&w=2070&auto=format&fit=crop" },
 ];
 
+const INITIAL_MOCK_FILES: Record<string, any[]> = {
+  "Recents": [
+    { id: "f-1", name: "Presentation.pptx", type: "file", icon: <FileText className="text-orange-400" /> },
+    { id: "f-2", name: "Invoice_04.pdf", type: "file", icon: <FileText className="text-red-400" /> },
+    { id: "f-3", name: "Screenshot.png", type: "file", icon: <ImageIcon className="text-blue-400" /> },
+  ],
+  "Applications": [
+    { id: "a-1", name: "Safari.app", type: "file", icon: <Chrome className="text-blue-400" /> },
+    { id: "a-2", name: "Music.app", type: "file", icon: <Music className="text-pink-500" /> },
+    { id: "a-3", name: "Terminal.app", type: "file", icon: <Terminal className="text-gray-100" /> },
+    { id: "a-4", name: "Messages.app", type: "file", icon: <MessageSquare className="text-green-500" /> },
+  ],
+  "Documents": [
+    { id: "folder-1", name: "Work Projects", type: "folder" },
+    { id: "folder-2", name: "Personal", type: "folder" },
+    { id: "f-4", name: "Resume_2024.pdf", type: "file", icon: <FileText className="text-blue-400" /> },
+    { id: "f-5", name: "Budget.xlsx", type: "file", icon: <FileText className="text-green-500" /> },
+  ],
+  "Documents/Work Projects": [
+    { id: "folder-3", name: "Alpha_Release", type: "folder" },
+    { id: "f-6", name: "Specs.txt", type: "file", icon: <FileText className="text-gray-400" /> },
+  ],
+  "Documents/Work Projects/Alpha_Release": [
+    { id: "f-7", name: "build_logs.txt", type: "file", icon: <FileText className="text-gray-400" /> },
+    { id: "f-8", name: "alpha_screenshot.png", type: "file", icon: <ImageIcon className="text-blue-400" /> },
+  ],
+  "Documents/Personal": [
+    { id: "folder-4", name: "Holiday_Photos", type: "folder" },
+    { id: "f-9", name: "Bucket_List.txt", type: "file", icon: <FileText className="text-gray-400" /> },
+  ],
+  "Downloads": [
+    { id: "f-10", name: "macos_sonoma.dmg", type: "file", icon: <FileText className="text-gray-400" /> },
+    { id: "f-11", name: "archive.zip", type: "file", icon: <FileText className="text-yellow-500" /> },
+  ],
+  "iCloud Drive": [
+    { id: "folder-5", name: "Shared Documents", type: "folder" },
+    { id: "f-12", name: "Backup_Config", type: "file", icon: <Settings className="text-gray-500" /> },
+  ]
+};
+
 const APPS = [
   { id: "finder", title: "Finder", icon: <Folder className="text-blue-500" />, color: "bg-blue-500/10" },
   { id: "chrome", title: "Safari", icon: <Chrome className="text-blue-400" />, color: "bg-blue-400/10" },
@@ -75,6 +115,7 @@ const APPS = [
   { id: "preview", title: "Preview", icon: <Eye className="text-orange-500" />, color: "bg-orange-500/10" },
   { id: "image_preview", title: "Preview", icon: <ImageIcon className="text-orange-400" />, color: "bg-orange-400/10" },
   { id: "wallpaper_settings", title: "Wallpaper", icon: <Monitor className="text-purple-400" />, color: "bg-purple-400/10" },
+  { id: "trash", title: "Trash", icon: <Trash2 className="text-gray-400" />, color: "bg-white/10" },
 ];
 
 // --- Boot Screen ---
@@ -442,6 +483,9 @@ export default function App() {
   const [launchingApps, setLaunchingApps] = useState<string[]>([]);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [trashItems, setTrashItems] = useState<any[]>([]);
+  const [finderFiles, setFinderFiles] = useState(INITIAL_MOCK_FILES);
+  const trashRef = useRef<HTMLDivElement>(null);
   const [desktopItems, setDesktopItems] = useState<DesktopItem[]>([
     { 
       id: 'mac-hd', 
@@ -473,7 +517,7 @@ export default function App() {
     },
   ]);
 
-  // Sync wallpaper settings window content
+  // Sync windows content
   useEffect(() => {
     setWindows(prev => prev.map(w => {
       if (w.id === 'wallpaper_settings') {
@@ -482,9 +526,28 @@ export default function App() {
           content: <WallpaperSettingsContent current={wallpaper} onSelect={setWallpaper} />
         };
       }
+      if (w.id === 'finder') {
+        // Find existing path or default to Documents
+        const currentPath = (w.content as any)?.props?.initialPath || "Documents";
+        return {
+          ...w,
+          content: <FinderContent 
+            onOpenApp={openApp} 
+            initialPath={currentPath} 
+            files={finderFiles} 
+            onMoveToTrash={moveToTrashFromFinder} 
+          />
+        };
+      }
+      if (w.id === 'trash') {
+        return {
+          ...w,
+          content: <TrashContent items={trashItems} onEmpty={() => setTrashItems([])} onPutBack={putBackItem} />
+        };
+      }
       return w;
     }));
-  }, [wallpaper]);
+  }, [wallpaper, finderFiles, trashItems]);
 
   const desktopRef = useRef<HTMLDivElement>(null);
   
@@ -545,7 +608,12 @@ export default function App() {
         // If we have a new initialPath for Finder, update its content
         let updatedContent = existingWindow.content;
         if (appId === 'finder' && options?.initialPath) {
-          updatedContent = <FinderContent onOpenApp={openApp} initialPath={options.initialPath} />;
+          updatedContent = <FinderContent 
+            onOpenApp={openApp} 
+            initialPath={options.initialPath} 
+            files={finderFiles} 
+            onMoveToTrash={moveToTrashFromFinder} 
+          />;
         }
 
         next[existingIndex] = { 
@@ -578,7 +646,9 @@ export default function App() {
         content: appId === 'preview' ? <PDFPreviewContent /> : 
                  appId === 'image_preview' ? <ImagePreviewContent /> : 
                  appId === 'wallpaper_settings' ? <WallpaperSettingsContent current={wallpaper} onSelect={setWallpaper} /> :
-                 appId === 'finder' ? <FinderContent onOpenApp={openApp} initialPath={options?.initialPath} /> :
+                 appId === 'finder' ? <FinderContent onOpenApp={openApp} initialPath={options?.initialPath} files={finderFiles} onMoveToTrash={moveToTrashFromFinder} /> :
+                 appId === 'trash' ? <TrashContent items={trashItems} onEmpty={() => setTrashItems([])} onPutBack={putBackItem} /> :
+                 appId === 'terminal' ? <TerminalContent files={finderFiles} /> :
                  <MockAppContent id={appId} name={appInfo.title} />
       };
 
@@ -586,6 +656,49 @@ export default function App() {
       setMaxZ(prev => prev + 1);
       setLaunchingApps(prev => prev.filter(id => id !== appId));
     }, 1200);
+  };
+
+  const isDroppedOnTrash = (point: { x: number; y: number }) => {
+    if (!trashRef.current) return false;
+    const rect = trashRef.current.getBoundingClientRect();
+    return (
+      point.x >= rect.left &&
+      point.x <= rect.right &&
+      point.y >= rect.top &&
+      point.y <= rect.bottom
+    );
+  };
+
+  const moveToTrashFromDesktop = (itemId: string, point: { x: number; y: number }) => {
+    if (isDroppedOnTrash(point)) {
+      const item = desktopItems.find(i => i.id === itemId);
+      if (item) {
+        setTrashItems(prev => [...prev, { ...item, source: 'desktop' }]);
+        setDesktopItems(prev => prev.filter(i => i.id !== itemId));
+      }
+    }
+  };
+
+  const moveToTrashFromFinder = (file: any, path: string, point: { x: number; y: number }) => {
+    if (isDroppedOnTrash(point)) {
+      setTrashItems(prev => [...prev, { ...file, source: 'finder', originalPath: path }]);
+      setFinderFiles(prev => ({
+        ...prev,
+        [path]: prev[path].filter(f => f.id !== file.id || f.name !== file.name)
+      }));
+    }
+  };
+
+  const putBackItem = (item: any) => {
+    if (item.source === 'desktop') {
+      setDesktopItems(prev => [...prev, { id: item.id, type: item.type, label: item.label, icon: item.icon, onClick: item.onClick }]);
+    } else if (item.source === 'finder') {
+      setFinderFiles(prev => ({
+        ...prev,
+        [item.originalPath]: [...(prev[item.originalPath] || []), { id: item.id, name: item.name, type: item.type, icon: item.icon }]
+      }));
+    }
+    setTrashItems(prev => prev.filter(i => i.id !== item.id));
   };
 
   const closeApp = (id: string) => {
@@ -607,7 +720,8 @@ export default function App() {
       id: newId,
       type: 'folder',
       label: 'Untitled Folder',
-      icon: <Folder size={40} className="text-blue-200 fill-blue-500/80" />
+      icon: <Folder size={40} className="text-blue-200 fill-blue-500/80" />,
+      onClick: () => openApp('finder', { initialPath: 'Documents' })
     };
     setDesktopItems(prev => [...prev, newFolder]);
     setContextMenu(null);
@@ -684,6 +798,7 @@ export default function App() {
             onSelect={() => setSelectedId(item.id)}
             onStartEdit={() => setEditingId(item.id)}
             onRename={(newName) => handleRename(item.id, newName)}
+            onDragEnd={(point) => moveToTrashFromDesktop(item.id, point)}
             dragConstraints={desktopRef}
           />
         ))}
@@ -773,8 +888,10 @@ export default function App() {
           ))}
           <div className="w-px h-8 bg-white/20 mx-1 mb-2" />
           <DockIcon 
-            app={{ id: "trash", title: "Trash", icon: <Trash2 className="text-gray-400" />, color: "bg-white/10" }} 
-            onClick={() => {}} 
+            ref={trashRef}
+            app={{ id: "trash", title: "Trash", icon: trashItems.length > 0 ? <Trash2 className="text-blue-200 fill-blue-500/50" /> : <Trash2 className="text-gray-400" />, color: "bg-white/10" }} 
+            onClick={() => openApp('trash')} 
+            isOpen={windows.some(w => w.id === 'trash')}
           />
         </motion.div>
       </div>
@@ -793,6 +910,7 @@ interface DesktopIconProps {
   onSelect?: () => void;
   onRename?: (newName: string) => void;
   onStartEdit?: () => void;
+  onDragEnd?: (point: { x: number; y: number }) => void;
   dragConstraints?: React.RefObject<HTMLDivElement | null>;
 }
 
@@ -806,6 +924,7 @@ const DesktopIcon: React.FC<DesktopIconProps> = ({
   onSelect,
   onRename,
   onStartEdit,
+  onDragEnd,
   dragConstraints 
 }) => {
   const [tempLabel, setTempLabel] = useState(label);
@@ -833,6 +952,7 @@ const DesktopIcon: React.FC<DesktopIconProps> = ({
   return (
     <motion.div 
       drag
+      onDragEnd={(_, info) => onDragEnd?.(info.point)}
       dragConstraints={dragConstraints}
       dragElastic={0.05}
       dragMomentum={false}
@@ -883,19 +1003,19 @@ const DesktopIcon: React.FC<DesktopIconProps> = ({
   );
 };
 
-const DockIcon: React.FC<{ 
+const DockIcon = React.forwardRef<HTMLDivElement, { 
   app: any; 
   onClick: () => void; 
   isOpen?: boolean;
   isMinimized?: boolean;
   isLaunching?: boolean;
-}> = ({ 
+}>(({ 
   app, 
   onClick, 
   isOpen, 
   isMinimized,
   isLaunching
-}) => {
+}, ref) => {
   const handleClick = () => {
     onClick();
   };
@@ -920,7 +1040,7 @@ const DockIcon: React.FC<{
   };
 
   return (
-    <div className="relative group flex flex-col items-center h-full pt-1">
+    <div ref={ref} className="relative group flex flex-col items-center h-full pt-1">
       {/* Label Tooltip */}
       <div className="absolute bottom-full mb-6 px-3 py-1 bg-black/60 backdrop-blur-xl rounded-lg text-[13px] font-medium opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none text-white shadow-[0_10px_20px_rgba(0,0,0,0.2)] border border-white/10 hidden sm:block">
         {app.title}
@@ -951,7 +1071,7 @@ const DockIcon: React.FC<{
       </div>
     </div>
   );
-};
+});
 
 const ImagePreviewContent = () => {
   return (
@@ -1027,7 +1147,12 @@ const WallpaperSettingsContent = ({ current, onSelect }: { current: string; onSe
   );
 };
 
-const FinderContent = ({ onOpenApp, initialPath }: { onOpenApp: (appId: string, options?: any) => void; initialPath?: string }) => {
+const FinderContent = ({ onOpenApp, initialPath, files, onMoveToTrash }: { 
+  onOpenApp: (appId: string, options?: any) => void; 
+  initialPath?: string;
+  files: Record<string, any[]>;
+  onMoveToTrash: (file: any, path: string, point: { x: number; y: number }) => void;
+}) => {
   const [currentPath, setCurrentPath] = useState(initialPath || "Recents");
   const [history, setHistory] = useState<string[]>([initialPath || "Recents"]);
   const [historyIndex, setHistoryIndex] = useState(0);
@@ -1040,46 +1165,6 @@ const FinderContent = ({ onOpenApp, initialPath }: { onOpenApp: (appId: string, 
       setHistoryIndex(0);
     }
   }, [initialPath]);
-
-  const MOCK_FILES: Record<string, any[]> = {
-    "Recents": [
-      { name: "Presentation.pptx", type: "file", icon: <FileText className="text-orange-400" /> },
-      { name: "Invoice_04.pdf", type: "file", icon: <FileText className="text-red-400" /> },
-      { name: "Screenshot.png", type: "file", icon: <ImageIcon className="text-blue-400" /> },
-    ],
-    "Applications": [
-      { name: "Safari.app", type: "file", icon: <Chrome className="text-blue-400" /> },
-      { name: "Music.app", type: "file", icon: <Music className="text-pink-500" /> },
-      { name: "Terminal.app", type: "file", icon: <Terminal className="text-gray-100" /> },
-      { name: "Messages.app", type: "file", icon: <MessageSquare className="text-green-500" /> },
-    ],
-    "Documents": [
-      { name: "Work Projects", type: "folder" },
-      { name: "Personal", type: "folder" },
-      { name: "Resume_2024.pdf", type: "file", icon: <FileText className="text-blue-400" /> },
-      { name: "Budget.xlsx", type: "file", icon: <FileText className="text-green-500" /> },
-    ],
-    "Documents/Work Projects": [
-      { name: "Alpha_Release", type: "folder" },
-      { name: "Specs.txt", type: "file", icon: <FileText className="text-gray-400" /> },
-    ],
-    "Documents/Work Projects/Alpha_Release": [
-      { name: "build_logs.txt", type: "file", icon: <FileText className="text-gray-400" /> },
-      { name: "alpha_screenshot.png", type: "file", icon: <ImageIcon className="text-blue-400" /> },
-    ],
-    "Documents/Personal": [
-      { name: "Holiday_Photos", type: "folder" },
-      { name: "Bucket_List.txt", type: "file", icon: <FileText className="text-gray-400" /> },
-    ],
-    "Downloads": [
-      { name: "macos_sonoma.dmg", type: "file", icon: <FileText className="text-gray-400" /> },
-      { name: "archive.zip", type: "file", icon: <FileText className="text-yellow-500" /> },
-    ],
-    "iCloud Drive": [
-      { name: "Shared Documents", type: "folder" },
-      { name: "Backup_Config", type: "file", icon: <Settings className="text-gray-500" /> },
-    ]
-  };
 
   const navigateTo = (path: string) => {
     if (path === currentPath) return;
@@ -1104,7 +1189,7 @@ const FinderContent = ({ onOpenApp, initialPath }: { onOpenApp: (appId: string, 
     }
   };
 
-  const items = MOCK_FILES[currentPath] || [];
+  const items = files[currentPath] || [];
 
   return (
     <div className="flex flex-col h-full bg-[#1e1e1e]">
@@ -1179,10 +1264,8 @@ const FinderContent = ({ onOpenApp, initialPath }: { onOpenApp: (appId: string, 
               key={file.name} 
               onDoubleClick={() => {
                 if (file.type === 'folder') {
-                  const newPath = currentPath === 'Recents' ? `Documents/${file.name}` : `${currentPath}/${file.name}`;
-                  // Special logic for Recents navigation if needed, but let's assume it stays in Documents for mock
-                  const targetPath = MOCK_FILES[`${currentPath}/${file.name}`] ? `${currentPath}/${file.name}` : 
-                                     MOCK_FILES[file.name] ? file.name : null;
+                  const targetPath = files[`${currentPath}/${file.name}`] ? `${currentPath}/${file.name}` : 
+                                     files[file.name] ? file.name : null;
                   
                   if (targetPath) navigateTo(targetPath);
                   else if (file.name === "Work Projects") navigateTo("Documents/Work Projects");
@@ -1208,9 +1291,14 @@ const FinderContent = ({ onOpenApp, initialPath }: { onOpenApp: (appId: string, 
                   }
                 }
               }}
-              className="flex flex-col items-center gap-2 group cursor-default p-2 rounded-xl transition-all hover:bg-white/5"
+              className="flex flex-col items-center gap-2 group cursor-default p-2 rounded-xl transition-all hover:bg-white/5 relative"
             >
-              <div className="w-16 h-16 flex items-center justify-center transition-transform group-active:scale-95">
+              <motion.div 
+                drag
+                dragMomentum={false}
+                onDragEnd={(_, info) => onMoveToTrash(file, currentPath, info.point)}
+                className="w-16 h-16 flex items-center justify-center transition-transform group-active:scale-95 z-20"
+              >
                 {file.type === 'folder' ? (
                   <Folder size={48} className="text-blue-400 fill-blue-500/30" />
                 ) : (
@@ -1218,7 +1306,7 @@ const FinderContent = ({ onOpenApp, initialPath }: { onOpenApp: (appId: string, 
                     {file.icon}
                   </div>
                 )}
-              </div>
+              </motion.div>
               <span className="text-[12px] text-white/90 text-center line-clamp-2 px-1 font-medium">{file.name}</span>
             </div>
           ))}
@@ -1236,55 +1324,6 @@ const FinderContent = ({ onOpenApp, initialPath }: { onOpenApp: (appId: string, 
 };
 
 const MockAppContent = ({ id, name }: { id: string; name: string }) => {
-  if (id === "terminal") {
-    return (
-      <div className="bg-[#1e1e1e] text-green-400 font-mono p-5 h-full text-sm leading-relaxed overflow-hidden">
-        <div className="flex gap-1.5 mb-2 border-b border-white/5 pb-2">
-          <span className="text-gray-500">jtgunawan@macos-clone</span>
-          <span className="text-blue-400">~</span>
-        </div>
-        <div>Last login: Thu Apr 16 04:50:27 2026 on ttys001</div>
-        <div className="mt-4">
-          <span className="text-white">macbook-pro:~ user$</span> <span className="text-blue-400">ls -la</span>
-          <div className="pl-4 mt-1 opacity-80">
-            drwxr-xr-x  3 user  staff   96B Apr 16 11:50 .<br/>
-            drwxr-xr-x  5 user  staff   160B Apr 16 11:50 ..<br/>
-            -rw-r--r--  1 user  staff   1.2K Apr 16 11:50 README.md<br/>
-            -rwxr-xr-x  1 user  staff   4.5K Apr 16 11:50 system_core.sh
-          </div>
-        </div>
-        <div className="mt-4">
-          <span className="text-white">macbook-pro:~ user$</span> <span className="text-blue-400">neofetch</span>
-          <div className="flex gap-6 mt-2">
-            <div className="text-white font-bold text-lg leading-none opacity-50">
-              ####<br/>
-              ######<br/>
-              ###<br/>
-              ###<br/>
-              ######<br/>
-              ####
-            </div>
-            <div className="text-[12px] opacity-90">
-              <span className="text-blue-400 font-bold">user@macbook-pro</span><br/>
-              ------------------<br/>
-              <span className="text-blue-400 font-bold">OS:</span> macOS Web Clone 14.0<br/>
-              <span className="text-blue-400 font-bold">Kernel:</span> x86_64 Webkit<br/>
-              <span className="text-blue-400 font-bold">Uptime:</span> 1 hour<br/>
-              <span className="text-blue-400 font-bold">Shell:</span> zsh 5.9<br/>
-              <span className="text-blue-400 font-bold">Resolution:</span> {window.innerWidth}x{window.innerHeight}<br/>
-              <span className="text-blue-400 font-bold">DE:</span> Aqua-React<br/>
-              <span className="text-blue-400 font-bold">WM:</span> Framer-Motion<br/>
-            </div>
-          </div>
-        </div>
-        <div className="mt-6 flex items-center gap-2">
-          <span className="text-white">macbook-pro:~ user$</span>
-          <span className="w-2.5 h-5 bg-white/80 animate-pulse inline-block" />
-        </div>
-      </div>
-    );
-  }
-
   // Finder-like layout for most apps
   return (
     <div className="flex h-full overflow-hidden">
@@ -1326,6 +1365,233 @@ const MockAppContent = ({ id, name }: { id: string; name: string }) => {
           </div>
         ))}
       </section>
+    </div>
+  );
+};
+
+const TrashContent = ({ items, onEmpty, onPutBack }: { items: any[]; onEmpty: () => void; onPutBack: (item: any) => void }) => {
+  return (
+    <div className="flex flex-col h-full bg-[#1e1e1e]">
+      {/* Trash Toolbar */}
+      <div className="h-12 bg-[#323232] border-b border-black/20 flex items-center justify-between px-4 shrink-0">
+        <div className="flex items-center gap-4">
+          <div className="text-white/90 text-sm font-semibold ml-2">Trash</div>
+          <div className="text-white/40 text-[11px]">{items.length} items</div>
+        </div>
+        <button 
+          onClick={onEmpty}
+          disabled={items.length === 0}
+          className="text-[12px] bg-white/10 hover:bg-white/20 text-white/90 px-3 py-1 rounded-md transition-colors disabled:opacity-30"
+        >
+          Empty Trash
+        </button>
+      </div>
+
+      <div className="flex-1 p-6 grid grid-cols-[repeat(auto-fill,minmax(110px,1fr))] gap-6 content-start overflow-auto bg-[#1a1a1a]/40">
+        {items.map(item => (
+          <div 
+            key={item.id} 
+            className="flex flex-col items-center gap-2 group cursor-default p-2 rounded-xl transition-all hover:bg-white/5"
+          >
+            <div className="w-16 h-16 flex items-center justify-center">
+              {item.type === 'folder' ? (
+                <Folder size={40} className="text-blue-400 fill-blue-500/30 opacity-60" />
+              ) : (
+                <div className="w-12 h-12 bg-white/5 border border-white/5 rounded-lg flex items-center justify-center opacity-60">
+                  {item.icon}
+                </div>
+              )}
+            </div>
+            <span className="text-[11px] text-white/70 text-center line-clamp-2 px-1">{item.label || item.name}</span>
+            <button 
+              onClick={() => onPutBack(item)}
+              className="text-[10px] bg-blue-600/80 hover:bg-blue-600 text-white px-2 py-0.5 rounded opacity-0 group-hover:opacity-100 transition-opacity"
+            >
+              Put Back
+            </button>
+          </div>
+        ))}
+
+        {items.length === 0 && (
+          <div className="col-span-full h-full flex flex-col items-center justify-center text-white/20 mt-10">
+            <Trash2 size={64} className="opacity-10 mb-2" />
+            <span className="text-sm">Trash is Empty</span>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+const TerminalContent = ({ files }: { files: Record<string, any[]> }) => {
+  const [history, setHistory] = useState<any[]>([]);
+  const [input, setInput] = useState("");
+  const [currentPath, setCurrentPath] = useState("Documents");
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+    }
+  }, [history]);
+
+  useEffect(() => {
+    inputRef.current?.focus();
+  }, []);
+
+  const executeCommand = (cmd: string) => {
+    const trimmedCmd = cmd.trim();
+    const args = trimmedCmd.toLowerCase().split(' ');
+    const mainCmd = args[0];
+    let output: React.ReactNode = null;
+
+    switch (mainCmd) {
+      case 'help':
+        output = (
+          <div className="grid grid-cols-[100px,1fr] gap-x-4 text-white/50">
+            <span className="text-blue-400 font-bold">ls</span><span>list directory contents</span>
+            <span className="text-blue-400 font-bold">cd [dir]</span><span>change directory</span>
+            <span className="text-blue-400 font-bold">cat [file]</span><span>show file content</span>
+            <span className="text-blue-400 font-bold">clear</span><span>clear terminal screen</span>
+            <span className="text-blue-400 font-bold">neofetch</span><span>show system information</span>
+            <span className="text-blue-400 font-bold">date</span><span>print current date</span>
+            <span className="text-blue-400 font-bold">whoami</span><span>print effective user id</span>
+            <span className="text-blue-400 font-bold">pwd</span><span>print working directory</span>
+            <span className="text-blue-400 font-bold">help</span><span>show this help message</span>
+          </div>
+        );
+        break;
+      case 'ls':
+        const currentFiles = files[currentPath] || [];
+        output = (
+          <div className="flex flex-wrap gap-x-6">
+            {currentFiles.map(f => (
+              <span key={f.id} className={f.type === 'folder' ? 'text-blue-400 font-bold' : 'text-white'}>
+                {f.name}
+              </span>
+            ))}
+          </div>
+        );
+        break;
+      case 'pwd':
+        output = <div className="text-white/80">/Users/hadigunawan/{(currentPath)}</div>;
+        break;
+      case 'whoami':
+        output = <div className="text-white/80">hadigunawan</div>;
+        break;
+      case 'date':
+        output = <div className="text-white/80">{new Date().toString()}</div>;
+        break;
+      case 'clear':
+        setHistory([]);
+        setInput("");
+        return;
+      case 'neofetch':
+        output = (
+          <div className="flex gap-6 mt-2">
+            <div className="text-white font-bold text-lg leading-none opacity-50">
+              ####<br/>
+              ######<br/>
+              ###<br/>
+              ###<br/>
+              ######<br/>
+              ####
+            </div>
+            <div className="text-[12px] opacity-90">
+              <span className="text-blue-400 font-bold">user@macbook-pro</span><br/>
+              ------------------<br/>
+              <span className="text-blue-400 font-bold">OS:</span> macOS Web Clone 14.0<br/>
+              <span className="text-blue-400 font-bold">Kernel:</span> x86_64 Webkit<br/>
+              <span className="text-blue-400 font-bold">Uptime:</span> 1 hour<br/>
+              <span className="text-blue-400 font-bold">Shell:</span> hadish 1.0<br/>
+              <span className="text-blue-400 font-bold">Resolution:</span> {window.innerWidth}x{window.innerHeight}<br/>
+              <span className="text-blue-400 font-bold">DE:</span> Aqua-React<br/>
+              <span className="text-blue-400 font-bold">WM:</span> Framer-Motion<br/>
+            </div>
+          </div>
+        );
+        break;
+      case 'cd':
+        const targetDir = args[1];
+        if (!targetDir || targetDir === '~') {
+          setCurrentPath("Documents");
+        } else if (targetDir === '..') {
+          const parts = currentPath.split('/');
+          if (parts.length > 1) {
+            parts.pop();
+            setCurrentPath(parts.join('/'));
+          } else {
+            setCurrentPath("Documents");
+          }
+        } else {
+          const folders = (files[currentPath] || []).filter(f => f.type === 'folder');
+          const found = folders.find(f => f.name.toLowerCase() === targetDir.toLowerCase());
+          if (found) {
+            setCurrentPath(prev => `${prev}/${found.name}`);
+          } else {
+            output = <div className="text-red-400">cd: no such directory: {targetDir}</div>;
+          }
+        }
+        break;
+      case 'cat':
+        const fileToRead = args[1];
+        if (!fileToRead) {
+          output = <div className="text-red-400">usage: cat [file]</div>;
+        } else {
+          const foundFile = (files[currentPath] || []).find(f => f.name.toLowerCase() === fileToRead.toLowerCase() && f.type === 'file');
+          if (foundFile) {
+            output = <div className="text-white/80 opacity-70 mt-1 whitespace-pre-wrap px-2 border-l border-white/10">This is the simulated content of {foundFile.name}.\nIn a real terminal, you would see the file text right here.</div>;
+          } else {
+            output = <div className="text-red-400">cat: {fileToRead}: No such file</div>;
+          }
+        }
+        break;
+      case '':
+        break;
+      default:
+        output = <div className="text-white/60">zsh: command not found: {mainCmd}</div>;
+    }
+
+    setHistory(prev => [...prev, { cmd: trimmedCmd, output, path: currentPath }]);
+    setInput("");
+  };
+
+  return (
+    <div 
+      className="bg-[#1e1e1e]/95 backdrop-blur-xl text-green-400 font-mono p-4 h-full text-sm leading-relaxed overflow-auto scroll-smooth"
+      ref={scrollRef}
+      onClick={() => inputRef.current?.focus()}
+    >
+      <div className="text-gray-500 mb-4 opacity-70">Last login: {new Date().toLocaleDateString()} {new Date().toLocaleTimeString()} on ttys001</div>
+      
+      {history.map((line, i) => (
+        <div key={i} className="mb-3">
+          <div className="flex items-center gap-2">
+            <span className="text-white font-medium opacity-80">macbook-pro</span>
+            <span className="text-blue-400">~{line.path.replace('Documents', '') || ''} $</span>
+            <span className="text-blue-200">{line.cmd}</span>
+          </div>
+          {line.output && <div className="mt-1 pl-4 mb-2">{line.output}</div>}
+        </div>
+      ))}
+
+      <div className="flex items-center gap-2">
+        <span className="text-white font-medium opacity-80">macbook-pro</span>
+        <span className="text-blue-400">~{currentPath.replace('Documents', '') || ''} $</span>
+        <form onSubmit={(e) => { e.preventDefault(); executeCommand(input); }} className="flex-1">
+          <input
+            ref={inputRef}
+            type="text"
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            className="bg-transparent border-none outline-none text-blue-200 w-full p-0 font-mono"
+            autoFocus
+            spellCheck={false}
+            autoComplete="off"
+          />
+        </form>
+      </div>
     </div>
   );
 };
