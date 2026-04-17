@@ -2,9 +2,10 @@ import React, { useState, useRef, useEffect } from "react";
 
 interface TerminalContentProps {
   files: Record<string, any[]>;
+  isFocused?: boolean;
 }
 
-const TerminalContent: React.FC<TerminalContentProps> = ({ files }) => {
+const TerminalContent: React.FC<TerminalContentProps> = ({ files, isFocused }) => {
   const [history, setHistory] = useState<any[]>([]);
   const [input, setInput] = useState("");
   const [currentPath, setCurrentPath] = useState("Documents");

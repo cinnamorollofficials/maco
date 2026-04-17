@@ -43,3 +43,19 @@ body {
 ::-webkit-scrollbar-thumb:hover {
   background: rgba(255, 255, 255, 0.2);
 }
+
+/* macOS Tahoe Premium Glass Effect */
+.tahoe-glass {
+  background: rgba(20, 20, 20, 0.4);
+  backdrop-filter: blur(45px) saturate(200%) brightness(1.2);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.4);
+}
+
+.tahoe-dock-divider {
+  width: 1.5px;
+  height: 28px;
+  background: linear-gradient(to bottom, transparent, rgba(255, 255, 255, 0.2), transparent);
+  margin: 0 6px 8px 6px;
+  align-self: end;
+}

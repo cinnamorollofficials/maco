@@ -66,16 +66,19 @@ const DockIcon = React.forwardRef<HTMLDivElement, DockIconProps>(({ app, onClick
         onClick={handleClick}
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
-        className={`w-12 h-12 ${app.color || 'bg-white/10'} backdrop-blur-md rounded-xl flex items-center justify-center cursor-default shadow-lg border border-white/5 relative transition-all duration-300 ${isMinimized ? 'opacity-70 scale-90' : ''}`}
+        className={`w-14 h-14 bg-transparent flex items-center justify-center cursor-default transition-all duration-300 ${isMinimized ? 'opacity-70 scale-90' : ''}`}
       >
-        <div className="w-8 h-8 flex items-center justify-center pointer-events-none drop-shadow-md">
+        <div className="w-16 h-16 flex items-center justify-center pointer-events-none drop-shadow-[0_8px_16px_rgba(0,0,0,0.4)]">
           {app.icon}
         </div>
       </motion.div>
 
-      {/* Activation Indicator Dot */}
+      {/* Activation Indicator Dot - Tahoe Style */}
       {isOpen && (
-        <div className="absolute -bottom-1.5 w-1 h-1 bg-white rounded-full shadow-[0_0_5px_rgba(255,255,255,0.8)]" />
+        <motion.div 
+          layoutId={`indicator-${app.id}`}
+          className="absolute -bottom-1.5 w-[5px] h-[5px] bg-white rounded-full shadow-[0_0_10px_rgba(255,255,255,0.8),0_0_2px_rgba(255,255,255,1)]" 
+        />
       )}
     </div>
   );

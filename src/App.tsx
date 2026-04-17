@@ -21,7 +21,6 @@ import FinderContent from "./components/apps/FinderContent";
 import SafariContent from "./components/apps/SafariContent";
 import NotesContent from "./components/apps/NotesContent";
 import TerminalContent from "./components/apps/TerminalContent";
-import TrashContent from "./components/apps/TrashContent";
 import WallpaperSettingsContent from "./components/apps/WallpaperSettingsContent";
 import PDFPreviewContent from "./components/apps/PDFPreviewContent";
 import ImagePreviewContent from "./components/apps/ImagePreviewContent";
@@ -65,6 +64,13 @@ export default function App() {
       onClick: () => openApp('finder', { initialPath: 'Documents' })
     },
     { 
+      id: "finder-desktop", 
+      type: "folder", 
+      label: "Portfolio", 
+      icon: <img src="/folder-icon-macos.png" className="w-14 h-14 object-contain shadow-sm" alt="folder" />,
+      onClick: () => openApp('finder', { initialPath: 'Portfolio' })
+    },
+    { 
       id: "trash-desktop", 
       type: "file", 
       label: "Trash", 
@@ -86,10 +92,29 @@ export default function App() {
           focusApp(windows[nextIndex].id);
         }
       }
+
+      // Arrow navigation for desktop
+      if (!activeWindow) {
+        if (e.key === 'ArrowDown') {
+          e.preventDefault();
+          setSelectedIds(prev => {
+            const currentIndex = desktopItems.findIndex(item => prev.includes(item.id));
+            const nextIndex = (currentIndex + 1) % desktopItems.length;
+            return [desktopItems[nextIndex].id];
+          });
+        } else if (e.key === 'ArrowUp') {
+          e.preventDefault();
+          setSelectedIds(prev => {
+            const currentIndex = desktopItems.findIndex(item => prev.includes(item.id));
+            const nextIndex = (currentIndex - 1 + desktopItems.length) % desktopItems.length;
+            return [desktopItems[nextIndex].id];
+          });
+        }
+      }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [windows, activeWindow]);
+  }, [windows, activeWindow, desktopItems]);
 
   const openApp = (appId: string, options?: { initialPath?: string }) => {
     const appInfo = APPS.find(a => a.id === appId);
@@ -110,16 +135,37 @@ export default function App() {
 
     setLaunchingApps(prev => [...prev, appId]);
     
-    setTimeout(() => {
+      setTimeout(() => {
       const content = 
-                 appId === 'terminal' ? <TerminalContent files={finderFiles} /> :
+                 appId === 'terminal' ? <TerminalContent files={finderFiles} isFocused={activeWindow === 'terminal'} /> :
                  appId === 'chrome' ? <SafariContent /> :
                  appId === 'notes' ? <NotesContent value={notes} onChange={setNotes} /> :
-                 appId === 'wallpaper_settings' ? <WallpaperSettingsContent current={wallpaper} onSelect={setWallpaper} /> :
                  appId === 'preview' ? <PDFPreviewContent /> :
                  appId === 'image_preview' ? <ImagePreviewContent /> :
-                 appId === 'finder' ? <FinderContent onOpenApp={openApp} initialPath={options?.initialPath} files={finderFiles} onMoveToTrash={moveToTrashFromFinder} /> :
-                 appId === 'trash' ? <TrashContent items={trashItems} onEmpty={() => setTrashItems([])} onPutBack={putBackItem} /> :
+                 appId === 'finder' ? (
+                   <FinderContent 
+                     onOpenApp={openApp} 
+                     initialPath={options?.initialPath} 
+                     files={finderFiles} 
+                     onMoveToTrash={moveToTrashFromFinder} 
+                     isFocused={activeWindow === 'finder'}
+                     trashItems={trashItems}
+                     onEmptyTrash={() => setTrashItems([])}
+                     onPutBack={putBackItem}
+                   />
+                 ) :
+                 appId === 'trash' ? (
+                   <FinderContent 
+                     onOpenApp={openApp} 
+                     initialPath="Trash" 
+                     files={finderFiles} 
+                     onMoveToTrash={moveToTrashFromFinder} 
+                     isFocused={activeWindow === 'trash'}
+                     trashItems={trashItems}
+                     onEmptyTrash={() => setTrashItems([])}
+                     onPutBack={putBackItem}
+                   />
+                 ) :
                  <MockAppContent id={appId} name={appInfo.title} />;
       
       const newWindow: WindowState = {
@@ -139,22 +185,41 @@ export default function App() {
   };
 
   const isDroppedOnTrash = (point: { x: number; y: number }) => {
-    if (!trashRef.current) return false;
-    const rect = trashRef.current.getBoundingClientRect();
-    return (
-      point.x >= rect.left &&
-      point.x <= rect.right &&
-      point.y >= rect.top &&
-      point.y <= rect.bottom
-    );
+    // Check Dock Trash
+    if (trashRef.current) {
+      const rect = trashRef.current.getBoundingClientRect();
+      if (
+        point.x >= rect.left &&
+        point.x <= rect.right &&
+        point.y >= rect.top &&
+        point.y <= rect.bottom
+      ) return true;
+    }
+
+    // Check Desktop Trash
+    const desktopTrashEl = document.getElementById('icon-trash-desktop');
+    if (desktopTrashEl) {
+      const rect = desktopTrashEl.getBoundingClientRect();
+      if (
+        point.x >= rect.left &&
+        point.x <= rect.right &&
+        point.y >= rect.top &&
+        point.y <= rect.bottom
+      ) return true;
+    }
+
+    return false;
   };
 
   const moveToTrashFromDesktop = (itemId: string, point: { x: number; y: number }) => {
     if (isDroppedOnTrash(point)) {
-      const item = desktopItems.find(i => i.id === itemId);
-      if (item) {
-        setTrashItems(prev => [...prev, { ...item, originalPath: 'Desktop' }]);
-        setDesktopItems(prev => prev.filter(i => i.id !== itemId));
+      // Handle multi-select: if the dragged item is part of selection, move all
+      const itemsToMove = selectedIds.includes(itemId) ? selectedIds : [itemId];
+      const items = desktopItems.filter(i => itemsToMove.includes(i.id) && i.id !== 'trash-desktop');
+      
+      if (items.length > 0) {
+        setTrashItems(prev => [...prev, ...items.map(item => ({ ...item, originalPath: 'Desktop' }))]);
+        setDesktopItems(prev => prev.filter(i => !itemsToMove.includes(i.id) || i.id === 'trash-desktop'));
         setSelectedIds([]);
       }
     }
@@ -345,16 +410,6 @@ export default function App() {
         />
       )}
 
-      {/* Context Menu */}
-      {contextMenu && (
-        <ContextMenu 
-          x={contextMenu.x} 
-          y={contextMenu.y} 
-          onCreateFolder={createFolder}
-          onChangeWallpaper={() => openApp('wallpaper_settings')}
-        />
-      )}
-
       {/* Windows Layer */}
       <AnimatePresence>
         {windows.map((win) => (
@@ -374,26 +429,35 @@ export default function App() {
 
       {/* Dock Area */}
       <div 
-        className="fixed bottom-[10px] left-1/2 -translate-x-1/2 z-[2000] w-fit"
+        className="fixed bottom-[12px] left-1/2 -translate-x-1/2 z-[2000] w-fit"
         onClick={(e) => e.stopPropagation()}
         onMouseDown={(e) => e.stopPropagation()}
       >
         <motion.div 
-          className="bg-[#141414]/40 backdrop-blur-[25px] border border-white/10 rounded-[20px] p-2 flex items-end gap-2 px-3 pb-2 shadow-2xl relative"
+          className="tahoe-glass rounded-[24px] p-2 flex items-end gap-1 px-3 pb-2 shadow-2xl relative"
         >
-          {APPS.map((app) => (
-            app.id !== 'trash' && (
-              <DockIcon 
-                key={app.id} 
-                app={app} 
-                onClick={() => openApp(app.id)} 
-                isOpen={windows.some(w => w.id === app.id)}
-                isMinimized={windows.find(w => w.id === app.id)?.isMinimized}
-                isLaunching={launchingApps.includes(app.id)}
-              />
-            )
-          ))}
-          <div className="w-px h-8 bg-white/20 mx-1 mb-2" />
+          {APPS.map((app, index) => {
+            const nextApp = APPS[index + 1];
+            const showDivider = nextApp && (app as any).category !== (nextApp as any).category;
+            
+            return (
+              <React.Fragment key={app.id}>
+                {app.id !== 'trash' && (
+                  <DockIcon 
+                    app={app} 
+                    onClick={() => openApp(app.id)} 
+                    isOpen={windows.some(w => w.id === app.id)}
+                    isMinimized={windows.find(w => w.id === app.id)?.isMinimized}
+                    isLaunching={launchingApps.includes(app.id)}
+                  />
+                )}
+                {showDivider && app.id !== 'trash' && nextApp.id !== 'trash' && (
+                  <div className="tahoe-dock-divider" />
+                )}
+              </React.Fragment>
+            );
+          })}
+          <div className="tahoe-dock-divider" />
           <DockIcon 
             ref={trashRef}
             app={APPS.find(a => a.id === 'trash')!} 
