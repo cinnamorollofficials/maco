@@ -12,8 +12,6 @@ interface WeatherWidgetProps {
 const WeatherWidget: React.FC<WeatherWidgetProps> = ({ weatherCondition }) => {
   return (
     <motion.div
-      whileHover={{ scale: 1.02 }}
-      transition={{ delay: 0.1 }}
       onClick={(e) => e.stopPropagation()}
       onMouseDown={(e) => e.stopPropagation()}
       className="w-[160px] h-[160px] bg-blue-600/20 backdrop-blur-2xl border border-white/20 rounded-[32px] p-5 flex flex-col justify-between shadow-2xl group select-none pointer-events-auto cursor-default overflow-hidden"

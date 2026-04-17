@@ -31,7 +31,7 @@ export default function App() {
   const [windows, setWindows] = useState<WindowState[]>([]);
   const [activeWindow, setActiveWindow] = useState<string | null>(null);
   const [launchingApps, setLaunchingApps] = useState<string[]>([]);
-  const [wallpaper, setWallpaper] = useState("https://images.unsplash.com/photo-1614850523296-d8c1af93d400?q=80&w=2070&auto=format&fit=crop");
+  const [wallpaper, setWallpaper] = useState("https://512pixels.net/downloads/macos-wallpapers-6k/26-Tahoe-Dark-6K.png");
   const [contextMenu, setContextMenu] = useState<{ x: number, y: number } | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);

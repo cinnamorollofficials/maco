@@ -64,7 +64,7 @@ export const INITIAL_MOCK_FILES: Record<string, any[]> = {
 
 export const APPS = [
   { id: "finder", title: "Finder", icon: <img src="/macos_finder_dark.webp" className="w-24 h-24 object-contain" alt="Finder" />, color: "bg-blue-500/10", category: "system" },
-  { id: "notes", title: "Notes", icon: <FileText className="w-9 h-9 text-yellow-600" />, color: "bg-yellow-100", category: "productivity" },
+  { id: "notes", title: "Notes", icon: <img src="/macos_notes.webp" className="w-24 h-24 object-contain" alt="Notes" />, color: "bg-yellow-100", category: "productivity" },
   { id: "music", title: "Music", icon: <Music className="w-9 h-9 text-pink-500" />, color: "bg-pink-500/10", category: "media" },
   { id: "preview", title: "Preview", icon: <img src="/macos_preview.webp" className="w-24 h-24 object-contain" alt="Preview" />, color: "bg-orange-500/10", category: "media" },
   { id: "terminal", title: "Terminal", icon: <img src="/macos_terimal.webp" className="w-24 h-24 object-contain" alt="Terminal" />, color: "bg-black", category: "system_tools" },
