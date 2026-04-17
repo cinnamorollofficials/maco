@@ -67,7 +67,7 @@ const DesktopIcon: React.FC<DesktopIconProps> = ({
         onSelect?.(e.shiftKey);
       }}
       onClick={(e) => e.stopPropagation()}
-      className={`w-[100px] flex flex-col items-center gap-1.5 p-2 rounded-lg cursor-default select-none group relative transition-colors pointer-events-auto ${isSelected ? 'bg-blue-500/30' : 'hover:bg-white/10'}`}
+      className={`desktop-icon w-[100px] flex flex-col items-center gap-1.5 p-2 rounded-lg cursor-default select-none group relative transition-colors pointer-events-auto ${isSelected ? 'bg-blue-500/30' : 'hover:bg-white/10'}`}
     >
       <div className="w-16 h-16 flex items-center justify-center relative">
         <div className="w-14 h-14 drop-shadow-lg group-active:scale-95 transition-transform flex items-center justify-center">

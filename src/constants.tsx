@@ -59,6 +59,14 @@ export const INITIAL_MOCK_FILES: Record<string, any[]> = {
   "iCloud Drive": [
     { id: "folder-5", name: "Shared Documents", type: "folder" },
     { id: "f-12", name: "Backup_Config", type: "file", icon: <Settings className="text-gray-500" /> },
+  ],
+  "Project": [
+    { id: "p-1", name: "Web_Desktop_V1", type: "folder" },
+    { id: "p-2", name: "AI_Agent_Logic.js", type: "file", icon: <FileText className="text-yellow-500" /> },
+  ],
+  "Experience": [
+    { id: "e-1", name: "Google_DeepMind.docx", type: "file", icon: <FileText className="text-blue-500" /> },
+    { id: "e-2", name: "React_Lead_Role.txt", type: "file", icon: <FileText className="text-gray-400" /> },
   ]
 };
 
@@ -69,6 +77,7 @@ export const APPS = [
   { id: "preview", title: "Preview", icon: <img src="/macos_preview.webp" className="w-12 h-12 object-contain" alt="Preview" />, color: "bg-orange-500/10", category: "media" },
   { id: "terminal", title: "Terminal", icon: <img src="/macos_terimal.webp" className="w-12 h-12 object-contain" alt="Terminal" />, color: "bg-black", category: "system_tools" },
   { id: "trash", title: "Trash", icon: <img src="/trash_icon.png" className="w-12 h-12 object-contain" alt="Trash" />, color: "bg-white/10", category: "system" },
+  { id: "wallpaper_settings", title: "Wallpaper Settings", icon: <Monitor className="text-blue-400" />, color: "bg-blue-500/10", category: "system", hidden: true },
 ];
 
 export const WALLPAPER_PRESETS = [

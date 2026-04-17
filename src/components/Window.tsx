@@ -72,7 +72,9 @@ const Window: React.FC<WindowProps> = ({
         
         <div className="flex-1 flex justify-center pointer-events-none">
           <div className="flex items-center gap-2">
-            <span className="text-white/40">{app.icon}</span>
+            <div className="flex items-center justify-center w-5 h-5 [&_img]:w-full [&_img]:h-full [&_svg]:w-3.5 [&_svg]:h-3.5 text-white/60">
+              {app.icon}
+            </div>
             <span className="text-white/90 text-[13px] font-semibold tracking-tight">{app.title}</span>
           </div>
         </div>

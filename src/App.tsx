@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import { Folder, Trash2 } from "lucide-react";
+import { Folder, Trash2, FileText } from "lucide-react";
 
 // Types & Constants
 import { WindowState, DesktopItem, Note } from "./types";
@@ -25,6 +25,7 @@ import WallpaperSettingsContent from "./components/apps/WallpaperSettingsContent
 import PDFPreviewContent from "./components/apps/PDFPreviewContent";
 import ImagePreviewContent from "./components/apps/ImagePreviewContent";
 import MusicContent from "./components/apps/MusicContent";
+import TrashContent from "./components/apps/TrashContent";
 import MockAppContent from "./components/apps/MockAppContent";
 
 export default function App() {
@@ -71,18 +72,25 @@ export default function App() {
   const trashRef = useRef<HTMLDivElement>(null);
   const [desktopItems, setDesktopItems] = useState<DesktopItem[]>([
     { 
-      id: "finder-desktop", 
+      id: "project-desktop", 
       type: "folder", 
-      label: "Documents", 
+      label: "Project", 
       icon: <img src="/folder-icon-macos.png" className="w-14 h-14 object-contain shadow-sm" alt="folder" />,
-      onClick: () => openApp('finder', { initialPath: 'Documents' })
+      onClick: () => openApp('finder', { initialPath: 'Project' })
     },
     { 
-      id: "finder-desktop", 
+      id: "experience-desktop", 
       type: "folder", 
-      label: "Portfolio", 
+      label: "Experience", 
       icon: <img src="/folder-icon-macos.png" className="w-14 h-14 object-contain shadow-sm" alt="folder" />,
-      onClick: () => openApp('finder', { initialPath: 'Portfolio' })
+      onClick: () => openApp('finder', { initialPath: 'Experience' })
+    },
+    { 
+      id: "cv-desktop", 
+      type: "file", 
+      label: "My_Profile.pdf", 
+      icon: <FileText className="w-12 h-12 text-red-500" />,
+      onClick: () => openApp('preview')
     },
     { 
       id: "trash-desktop", 
@@ -161,13 +169,8 @@ export default function App() {
         );
       case 'trash':
         return (
-          <FinderContent 
-            onOpenApp={openApp} 
-            initialPath="Trash" 
-            files={finderFiles} 
-            onMoveToTrash={moveToTrashFromFinder} 
-            isFocused={activeWindow === 'trash'}
-            trashItems={trashItems}
+          <TrashContent 
+            items={trashItems}
             onEmptyTrash={() => setTrashItems([])}
             onPutBack={putBackItem}
           />
@@ -184,15 +187,28 @@ export default function App() {
     const appInfo = APPS.find(a => a.id === appId);
     if (!appInfo) return;
 
-    const existingIndex = windows.findIndex(w => w.id === appId);
-    if (existingIndex !== -1) {
-      setWindows(prev => {
+    setWindows(prev => {
+      const existingIndex = prev.findIndex(w => w.id === appId);
+      const maxZ = Math.max(...prev.map(w => w.zIndex), 0);
+
+      if (existingIndex !== -1) {
         const next = [...prev];
         const existingWindow = next[existingIndex];
         next.splice(existingIndex, 1);
-        next.push({ ...existingWindow, isMinimized: false, zIndex: Math.max(...prev.map(w => w.zIndex), 0) + 1 });
+        // Important: Update config even for existing windows so initialPath changes work
+        next.push({ 
+          ...existingWindow, 
+          isMinimized: false, 
+          zIndex: maxZ + 1,
+          config: options || existingWindow.config 
+        });
         return next;
-      });
+      }
+      return prev;
+    });
+
+    const isAlreadyOpen = windows.some(w => w.id === appId);
+    if (isAlreadyOpen) {
       setActiveWindow(appId);
       return;
     }
@@ -200,17 +216,23 @@ export default function App() {
     setLaunchingApps(prev => [...prev, appId]);
     
     setTimeout(() => {
-      const newWindow: WindowState = {
-        id: appInfo.id,
-        title: appInfo.title,
-        icon: appInfo.icon,
-        isOpen: true,
-        isMinimized: false,
-        zIndex: Math.max(...windows.map(w => w.zIndex), 0) + 1,
-        config: options
-      };
+      setWindows(prev => {
+        const alreadyInPrev = prev.findIndex(w => w.id === appId);
+        if (alreadyInPrev !== -1) return prev; // Avoid duplicates
 
-      setWindows(prev => [...prev, newWindow]);
+        const maxZ = Math.max(...prev.map(w => w.zIndex), 0);
+        const newWindow: WindowState = {
+          id: appInfo.id,
+          title: appInfo.title,
+          icon: appInfo.icon,
+          isOpen: true,
+          isMinimized: false,
+          zIndex: maxZ + 1,
+          config: options
+        };
+        return [...prev, newWindow];
+      });
+      
       setActiveWindow(appId);
       setLaunchingApps(prev => prev.filter(id => id !== appId));
     }, 800);
@@ -301,10 +323,11 @@ export default function App() {
     if (e.button !== 0) return;
     isSelecting.current = false;
     
-    // Check if clicking directly on the desktop or a non-interactive element
-    const isDesktop = e.target === desktopRef.current || (e.target as HTMLElement).classList.contains('pointer-events-none');
+    // Start selection if clicking directly on the desktop or a non-interactive area
+    const target = e.target as HTMLElement;
+    const isInteractive = target.closest('button') || target.closest('input') || target.closest('textarea') || target.closest('.desktop-icon');
     
-    if (!isDesktop) return;
+    if (isInteractive) return;
 
     setSelection({ 
       start: { x: e.clientX, y: e.clientY }, 
@@ -351,6 +374,10 @@ export default function App() {
 
   const handleSelectionEnd = () => {
     setSelection(null);
+    // Use a small timeout to let the onClick handler run before resetting isSelecting
+    setTimeout(() => {
+      isSelecting.current = false;
+    }, 10);
   };
 
   const createFolder = () => {
@@ -388,13 +415,12 @@ export default function App() {
       ref={desktopRef}
       className="fixed inset-0 overflow-hidden bg-cover bg-center transition-all duration-700 ease-in-out"
       style={{ backgroundImage: wallpaper.startsWith('linear-gradient') ? wallpaper : `url(${wallpaper})` }}
-      onClick={() => { 
+      onClick={(e) => { 
         if (!isSelecting.current) {
           setContextMenu(null); 
           setSelectedIds([]); 
           setEditingId(null); 
         }
-        isSelecting.current = false;
       }}
       onContextMenu={handleContextMenu}
       onMouseDown={handleSelectionStart}
@@ -477,7 +503,7 @@ export default function App() {
         <motion.div 
           className="tahoe-glass rounded-[24px] p-2 flex items-end gap-1 px-3 pb-2 shadow-2xl relative"
         >
-          {APPS.map((app, index) => {
+          {APPS.filter(app => !(app as any).hidden).map((app, index) => {
             const nextApp = APPS[index + 1];
             const showDivider = nextApp && (app as any).category !== (nextApp as any).category;
             
