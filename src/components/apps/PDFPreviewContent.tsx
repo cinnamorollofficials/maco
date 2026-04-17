@@ -1,0 +1,83 @@
+import React from "react";
+import { Sidebar, ChevronLeft, ChevronRight, ZoomOut, ZoomIn, RotateCw, Share } from "lucide-react";
+
+const PDFPreviewContent = () => {
+  return (
+    <div className="flex flex-col h-full bg-[#333333]">
+      <div className="h-10 bg-[#444444] border-b border-black/20 flex items-center justify-between px-4 shrink-0">
+        <div className="flex items-center gap-4">
+          <div className="flex items-center gap-1 bg-black/20 rounded-md p-1">
+            <button className="p-1 hover:bg-white/10 rounded text-white/80"><Sidebar size={14} /></button>
+          </div>
+          <div className="flex items-center gap-2 text-white/60 text-[12px]">
+            <button className="p-1 hover:bg-white/10 rounded"><ChevronLeft size={14} /></button>
+            <span className="bg-black/30 px-2 py-0.5 rounded text-white/90">1 / 12</span>
+            <button className="p-1 hover:bg-white/10 rounded"><ChevronRight size={14} /></button>
+          </div>
+        </div>
+        
+        <div className="flex items-center gap-4">
+          <div className="flex items-center gap-1 bg-black/20 rounded-md p-1">
+            <button className="p-1 hover:bg-white/10 rounded text-white/80"><ZoomOut size={14} /></button>
+            <div className="w-px h-3 bg-white/10 mx-1" />
+            <button className="p-1 hover:bg-white/10 rounded text-white/80"><ZoomIn size={14} /></button>
+          </div>
+          <button className="p-1.5 hover:bg-white/10 rounded text-white/80"><RotateCw size={14} /></button>
+          <button className="p-1.5 hover:bg-white/10 rounded text-white/80"><Share size={14} /></button>
+        </div>
+      </div>
+
+      <div className="flex-1 overflow-auto p-8 flex justify-center bg-[#222222]">
+        <div className="w-[500px] h-[700px] bg-white shadow-2xl flex flex-col p-12 text-gray-800 font-serif relative">
+          <div className="absolute top-0 left-0 w-full h-1 bg-blue-500" />
+          <h1 className="text-3xl font-bold mb-2">JOSHUA GUNAWAN</h1>
+          <p className="text-blue-600 font-sans text-sm mb-8 tracking-widest uppercase">Senior Software Engineer</p>
+          
+          <div className="space-y-6">
+            <section>
+              <h2 className="text-sm font-bold border-b border-gray-200 pb-1 mb-3 uppercase tracking-wider">Experience</h2>
+              <div className="space-y-4">
+                <div>
+                  <div className="flex justify-between font-sans text-[12px] font-bold">
+                    <span>Tech Giant Corp</span>
+                    <span>2020 - Present</span>
+                  </div>
+                  <p className="text-[11px] mt-1 italic">Lead Frontend Developer</p>
+                  <ul className="list-disc list-inside text-[10px] mt-2 space-y-1 text-gray-600 leading-relaxed">
+                    <li>Architected high-performance macOS-style web interfaces using React and Framer Motion.</li>
+                    <li>Optimized rendering performance by 40% through advanced memoization techniques.</li>
+                    <li>Led a team of 12 engineers in developing a scalable design system.</li>
+                  </ul>
+                </div>
+                <div>
+                  <div className="flex justify-between font-sans text-[12px] font-bold">
+                    <span>Startup Innovation Lab</span>
+                    <span>2018 - 2020</span>
+                  </div>
+                  <p className="text-[11px] mt-1 italic">Full Stack Engineer</p>
+                  <ul className="list-disc list-inside text-[10px] mt-2 space-y-1 text-gray-600 leading-relaxed">
+                    <li>Developed real-time collaboration features using WebSockets and Firebase.</li>
+                    <li>Implemented secure OAuth2 flows for multiple third-party integrations.</li>
+                  </ul>
+                </div>
+              </div>
+            </section>
+
+            <section>
+              <h2 className="text-sm font-bold border-b border-gray-200 pb-1 mb-3 uppercase tracking-wider">Education</h2>
+              <div className="font-sans text-[11px]">
+                <div className="flex justify-between font-bold">
+                  <span>University of Technology</span>
+                  <span>2014 - 2018</span>
+                </div>
+                <p>B.S. in Computer Science, Magna Cum Laude</p>
+              </div>
+            </section>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default PDFPreviewContent;
