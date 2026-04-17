@@ -38,18 +38,21 @@ const FinderContent: React.FC<FinderContentProps> = ({
   const containerRef = useRef<HTMLDivElement>(null);
 
   const isTrash = currentPath === 'Trash';
-  const items = isTrash ? trashItems : (files[currentPath] || []);
+  const items = isTrash ? (trashItems || []) : (files?.[currentPath] || []);
   
   useEffect(() => {
-    if (initialPath) {
+    if (initialPath && initialPath !== currentPath) {
       setCurrentPath(initialPath);
-      setHistory([initialPath]);
-      setHistoryIndex(0);
+      setHistory(prev => {
+        if (prev[prev.length - 1] === initialPath) return prev;
+        return [...prev, initialPath];
+      });
+      setHistoryIndex(prev => prev + 1);
     }
   }, [initialPath]);
 
   useEffect(() => {
-    if (isFocused) {
+    if (isFocused && items.length > 0) {
       const handleKeyDown = (e: KeyboardEvent) => {
         if (['ArrowDown', 'ArrowUp', 'ArrowLeft', 'ArrowRight'].includes(e.key)) {
           e.preventDefault();
@@ -66,7 +69,7 @@ const FinderContent: React.FC<FinderContentProps> = ({
             const currentIndex = items.findIndex(f => (f.id || f.name) === prev);
             
             if (currentIndex === -1) {
-              return items[0].id || items[0].name;
+              return items[0]?.id || items[0]?.name || null;
             }
 
             let nextIndex = currentIndex;
@@ -89,8 +92,8 @@ const FinderContent: React.FC<FinderContentProps> = ({
           const selectedItem = items.find(f => (f.id || f.name) === selectedId);
           if (selectedItem) {
             if (selectedItem.type === 'folder' && !isTrash) {
-               const targetPath = files[`${currentPath}/${selectedItem.name}`] ? `${currentPath}/${selectedItem.name}` : 
-                                 files[selectedItem.name] ? selectedItem.name : null;
+               const targetPath = files?.[`${currentPath}/${selectedItem.name}`] ? `${currentPath}/${selectedItem.name}` : 
+                                 files?.[selectedItem.name] ? selectedItem.name : null;
               if (targetPath) navigateTo(targetPath);
             }
           }
@@ -103,7 +106,7 @@ const FinderContent: React.FC<FinderContentProps> = ({
   }, [isFocused, items, selectedId, currentPath, files, isTrash]);
 
   const navigateTo = (path: string) => {
-    if (path === currentPath) return;
+    if (!path || path === currentPath) return;
     const newHistory = history.slice(0, historyIndex + 1);
     newHistory.push(path);
     setHistory(newHistory);
@@ -114,16 +117,18 @@ const FinderContent: React.FC<FinderContentProps> = ({
 
   const goBack = () => {
     if (historyIndex > 0) {
-      setHistoryIndex(historyIndex - 1);
-      setCurrentPath(history[historyIndex - 1]);
+      const targetHistory = historyIndex - 1;
+      setHistoryIndex(targetHistory);
+      setCurrentPath(history[targetHistory]);
       setSelectedId(null);
     }
   };
 
   const goForward = () => {
     if (historyIndex < history.length - 1) {
-      setHistoryIndex(historyIndex + 1);
-      setCurrentPath(history[historyIndex + 1]);
+      const targetHistory = historyIndex + 1;
+      setHistoryIndex(targetHistory);
+      setCurrentPath(history[targetHistory]);
       setSelectedId(null);
     }
   };
@@ -135,21 +140,21 @@ const FinderContent: React.FC<FinderContentProps> = ({
           <div className="flex items-center gap-2">
             <button 
               onClick={goBack}
-              disabled={historyIndex === 0}
-              className={`p-1 rounded transition-colors ${historyIndex === 0 ? 'text-white/20' : 'text-white/80 hover:bg-white/10'}`}
+              disabled={historyIndex <= 0}
+              className={`p-1 rounded transition-colors ${historyIndex <= 0 ? 'text-white/20' : 'text-white/80 hover:bg-white/10'}`}
             >
               <ChevronLeft size={18} />
             </button>
             <button 
               onClick={goForward}
-              disabled={historyIndex === history.length - 1}
-              className={`p-1 rounded transition-colors ${historyIndex === history.length - 1 ? 'text-white/20' : 'text-white/80 hover:bg-white/10'}`}
+              disabled={historyIndex >= history.length - 1}
+              className={`p-1 rounded transition-colors ${historyIndex >= history.length - 1 ? 'text-white/20' : 'text-white/80 hover:bg-white/10'}`}
             >
               <ChevronRight size={18} />
             </button>
           </div>
           <div className="text-white/90 text-sm font-semibold tracking-wide ml-2">
-            {isTrash ? "Trash" : currentPath.split('/').pop()}
+            {isTrash ? "Trash" : (currentPath || "Recents").split('/').pop()}
           </div>
         </div>
 
