@@ -7,7 +7,7 @@ export interface WindowState {
   isOpen: boolean;
   isMinimized: boolean;
   zIndex: number;
-  content: React.ReactNode;
+  config?: any;
 }
 
 export interface DesktopItem {
@@ -16,4 +16,10 @@ export interface DesktopItem {
   label: string;
   icon: React.ReactNode;
   onClick?: () => void;
+}
+export interface Note {
+  id: string;
+  title: string;
+  content: string;
+  lastModified: number;
 }

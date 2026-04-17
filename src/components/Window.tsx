@@ -10,6 +10,7 @@ interface WindowProps {
   zIndex: number;
   onFocus: () => void;
   dragConstraints?: React.RefObject<HTMLDivElement | null>;
+  children?: React.ReactNode;
 }
 
 const Window: React.FC<WindowProps> = ({ 
@@ -18,7 +19,8 @@ const Window: React.FC<WindowProps> = ({
   onMinimize, 
   zIndex, 
   onFocus,
-  dragConstraints
+  dragConstraints,
+  children
 }) => {
   const [isMaximized, setIsMaximized] = useState(false);
   const dragControls = useDragControls();
@@ -79,7 +81,7 @@ const Window: React.FC<WindowProps> = ({
       </div>
 
       <div className="flex-1 overflow-hidden pointer-events-auto bg-[#1a1a1a]/40">
-        {app.content}
+        {children}
       </div>
     </motion.div>
   );

@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from "motion/react";
 import { Folder, Trash2 } from "lucide-react";
 
 // Types & Constants
-import { WindowState, DesktopItem } from "./types";
+import { WindowState, DesktopItem, Note } from "./types";
 import { APPS, INITIAL_MOCK_FILES } from "./constants";
 
 // Core Components
@@ -24,6 +24,7 @@ import TerminalContent from "./components/apps/TerminalContent";
 import WallpaperSettingsContent from "./components/apps/WallpaperSettingsContent";
 import PDFPreviewContent from "./components/apps/PDFPreviewContent";
 import ImagePreviewContent from "./components/apps/ImagePreviewContent";
+import MusicContent from "./components/apps/MusicContent";
 import MockAppContent from "./components/apps/MockAppContent";
 
 export default function App() {
@@ -37,7 +38,20 @@ export default function App() {
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [selection, setSelection] = useState<{ start: { x: number, y: number }, current: { x: number, y: number } } | null>(null);
   const [trashItems, setTrashItems] = useState<any[]>([]);
-  const [notes, setNotes] = useState<string>("Welcome to Notes!\n\nYou can use this app to jot down your ideas.");
+  const [notes, setNotes] = useState<Note[]>([
+    {
+      id: '1',
+      title: 'Welcome to Notes',
+      content: 'Welcome to Notes!\n\nYou can use this app to jot down your ideas.',
+      lastModified: Date.now()
+    },
+    {
+      id: '2',
+      title: 'Pro Tips',
+      content: '• Double click icons to open apps\n• Drag icons to rearrange them\n• Right click for context menu',
+      lastModified: Date.now() - 1000 * 60 * 60
+    }
+  ]);
   const [weatherCondition, setWeatherCondition] = useState({ temp: 28, condition: "Sunny" });
   const [finderFiles, setFinderFiles] = useState(INITIAL_MOCK_FILES);
   const isSelecting = useRef(false);
@@ -116,6 +130,56 @@ export default function App() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [windows, activeWindow, desktopItems]);
 
+  const renderAppContent = (window: WindowState) => {
+    const { id, config } = window;
+    
+    switch (id) {
+      case 'terminal':
+        return <TerminalContent files={finderFiles} isFocused={activeWindow === 'terminal'} />;
+      case 'chrome':
+        return <SafariContent />;
+      case 'notes':
+        return <NotesContent notes={notes} onUpdateNotes={setNotes} />;
+      case 'music':
+        return <MusicContent />;
+      case 'preview':
+        return <PDFPreviewContent />;
+      case 'image_preview':
+        return <ImagePreviewContent />;
+      case 'finder':
+        return (
+          <FinderContent 
+            onOpenApp={openApp} 
+            initialPath={config?.initialPath} 
+            files={finderFiles} 
+            onMoveToTrash={moveToTrashFromFinder} 
+            isFocused={activeWindow === 'finder'}
+            trashItems={trashItems}
+            onEmptyTrash={() => setTrashItems([])}
+            onPutBack={putBackItem}
+          />
+        );
+      case 'trash':
+        return (
+          <FinderContent 
+            onOpenApp={openApp} 
+            initialPath="Trash" 
+            files={finderFiles} 
+            onMoveToTrash={moveToTrashFromFinder} 
+            isFocused={activeWindow === 'trash'}
+            trashItems={trashItems}
+            onEmptyTrash={() => setTrashItems([])}
+            onPutBack={putBackItem}
+          />
+        );
+      case 'wallpaper_settings':
+        return <WallpaperSettingsContent currentWallpaper={wallpaper} onSelectWallpaper={setWallpaper} />;
+      default:
+        const appInfo = APPS.find(a => a.id === id);
+        return <MockAppContent id={id} name={appInfo?.title || 'App'} />;
+    }
+  };
+
   const openApp = (appId: string, options?: { initialPath?: string }) => {
     const appInfo = APPS.find(a => a.id === appId);
     if (!appInfo) return;
@@ -135,39 +199,7 @@ export default function App() {
 
     setLaunchingApps(prev => [...prev, appId]);
     
-      setTimeout(() => {
-      const content = 
-                 appId === 'terminal' ? <TerminalContent files={finderFiles} isFocused={activeWindow === 'terminal'} /> :
-                 appId === 'chrome' ? <SafariContent /> :
-                 appId === 'notes' ? <NotesContent value={notes} onChange={setNotes} /> :
-                 appId === 'preview' ? <PDFPreviewContent /> :
-                 appId === 'image_preview' ? <ImagePreviewContent /> :
-                 appId === 'finder' ? (
-                   <FinderContent 
-                     onOpenApp={openApp} 
-                     initialPath={options?.initialPath} 
-                     files={finderFiles} 
-                     onMoveToTrash={moveToTrashFromFinder} 
-                     isFocused={activeWindow === 'finder'}
-                     trashItems={trashItems}
-                     onEmptyTrash={() => setTrashItems([])}
-                     onPutBack={putBackItem}
-                   />
-                 ) :
-                 appId === 'trash' ? (
-                   <FinderContent 
-                     onOpenApp={openApp} 
-                     initialPath="Trash" 
-                     files={finderFiles} 
-                     onMoveToTrash={moveToTrashFromFinder} 
-                     isFocused={activeWindow === 'trash'}
-                     trashItems={trashItems}
-                     onEmptyTrash={() => setTrashItems([])}
-                     onPutBack={putBackItem}
-                   />
-                 ) :
-                 <MockAppContent id={appId} name={appInfo.title} />;
-      
+    setTimeout(() => {
       const newWindow: WindowState = {
         id: appInfo.id,
         title: appInfo.title,
@@ -175,7 +207,7 @@ export default function App() {
         isOpen: true,
         isMinimized: false,
         zIndex: Math.max(...windows.map(w => w.zIndex), 0) + 1,
-        content: content
+        config: options
       };
 
       setWindows(prev => [...prev, newWindow]);
@@ -266,7 +298,14 @@ export default function App() {
   };
 
   const handleSelectionStart = (e: React.MouseEvent) => {
-    if (e.target !== desktopRef.current) return;
+    if (e.button !== 0) return;
+    isSelecting.current = false;
+    
+    // Check if clicking directly on the desktop or a non-interactive element
+    const isDesktop = e.target === desktopRef.current || (e.target as HTMLElement).classList.contains('pointer-events-none');
+    
+    if (!isDesktop) return;
+
     setSelection({ 
       start: { x: e.clientX, y: e.clientY }, 
       current: { x: e.clientX, y: e.clientY } 
@@ -412,17 +451,19 @@ export default function App() {
 
       {/* Windows Layer */}
       <AnimatePresence>
-        {windows.map((win) => (
-          !win.isMinimized && (
+        {windows.map((window) => (
+          !window.isMinimized && (
             <Window 
-              key={win.id} 
-              app={win} 
-              onClose={() => closeApp(win.id)}
-              onMinimize={() => minimizeApp(win.id)}
-              zIndex={win.zIndex}
-              onFocus={() => focusApp(win.id)}
+              key={window.id} 
+              app={window} 
+              onClose={() => closeApp(window.id)}
+              onMinimize={() => minimizeApp(window.id)}
+              zIndex={window.zIndex}
+              onFocus={() => focusApp(window.id)}
               dragConstraints={desktopRef}
-            />
+            >
+              {renderAppContent(window)}
+            </Window>
           )
         ))}
       </AnimatePresence>

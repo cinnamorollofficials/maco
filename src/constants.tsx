@@ -63,12 +63,12 @@ export const INITIAL_MOCK_FILES: Record<string, any[]> = {
 };
 
 export const APPS = [
-  { id: "finder", title: "Finder", icon: <img src="/macos_finder_dark.webp" className="w-24 h-24 object-contain" alt="Finder" />, color: "bg-blue-500/10", category: "system" },
-  { id: "notes", title: "Notes", icon: <img src="/macos_notes.webp" className="w-24 h-24 object-contain" alt="Notes" />, color: "bg-yellow-100", category: "productivity" },
-  { id: "music", title: "Music", icon: <Music className="w-9 h-9 text-pink-500" />, color: "bg-pink-500/10", category: "media" },
-  { id: "preview", title: "Preview", icon: <img src="/macos_preview.webp" className="w-24 h-24 object-contain" alt="Preview" />, color: "bg-orange-500/10", category: "media" },
-  { id: "terminal", title: "Terminal", icon: <img src="/macos_terimal.webp" className="w-24 h-24 object-contain" alt="Terminal" />, color: "bg-black", category: "system_tools" },
-  { id: "trash", title: "Trash", icon: <img src="/trash_icon.png" className="w-18 h-18 object-contain" alt="Trash" />, color: "bg-white/10", category: "system" },
+  { id: "finder", title: "Finder", icon: <img src="/macos_finder_dark.webp" className="w-12 h-12 object-contain" alt="Finder" />, color: "bg-blue-500/10", category: "system" },
+  { id: "notes", title: "Notes", icon: <img src="/macos_notes.webp" className="w-10 h-10 object-contain" alt="Notes" />, color: "bg-yellow-100", category: "productivity" },
+  { id: "music", title: "Music", icon: <img src="/macos_music.webp" className="w-12 h-12 object-contain" alt="Music" />, color: "bg-pink-500/10", category: "media" },
+  { id: "preview", title: "Preview", icon: <img src="/macos_preview.webp" className="w-12 h-12 object-contain" alt="Preview" />, color: "bg-orange-500/10", category: "media" },
+  { id: "terminal", title: "Terminal", icon: <img src="/macos_terimal.webp" className="w-12 h-12 object-contain" alt="Terminal" />, color: "bg-black", category: "system_tools" },
+  { id: "trash", title: "Trash", icon: <img src="/trash_icon.png" className="w-12 h-12 object-contain" alt="Trash" />, color: "bg-white/10", category: "system" },
 ];
 
 export const WALLPAPER_PRESETS = [
