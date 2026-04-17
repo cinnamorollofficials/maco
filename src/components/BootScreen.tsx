@@ -37,7 +37,7 @@ const BootScreen: React.FC<BootScreenProps> = ({ onComplete }) => {
       className="fixed inset-0 z-[10000] bg-black flex flex-col items-center justify-center select-none"
     >
       <div className="flex flex-col items-center gap-12 -mt-20">
-        <img src="public/apple_logo_white.png" alt="" />
+        <img src="public/apple_logo_white.png" alt="Apple Logo" className="w-[80px] h-[80px] object-contain" />
         
         <div className="w-[200px] h-[4px] bg-[#333333] rounded-full overflow-hidden">
           <motion.div 

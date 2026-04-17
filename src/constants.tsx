@@ -62,7 +62,7 @@ export const INITIAL_MOCK_FILES: Record<string, any[]> = {
 };
 
 export const APPS = [
-  { id: "finder", title: "Finder", icon: <Folder className="text-blue-500" />, color: "bg-blue-500/10" },
+  { id: "finder", title: "Finder", icon: <img src="/folder-icon-macos.png" className="w-8 h-8 object-contain" alt="Finder" />, color: "bg-blue-500/10" },
   { id: "chrome", title: "Safari", icon: <Compass className="text-blue-400" />, color: "bg-white" },
   { id: "music", title: "Music", icon: <Music className="text-pink-500" />, color: "bg-pink-500/10" },
   { id: "notes", title: "Notes", icon: <FileText className="text-yellow-600" />, color: "bg-yellow-100" },
@@ -72,7 +72,7 @@ export const APPS = [
   { id: "preview", title: "Preview", icon: <Eye className="text-orange-500" />, color: "bg-orange-500/10" },
   { id: "image_preview", title: "Preview", icon: <ImageIcon className="text-orange-400" />, color: "bg-orange-400/10" },
   { id: "wallpaper_settings", title: "Wallpaper", icon: <Monitor className="text-purple-400" />, color: "bg-purple-400/10" },
-  { id: "trash", title: "Trash", icon: <Trash2 className="text-gray-400" />, color: "bg-white/10" },
+  { id: "trash", title: "Trash", icon: <img src="/trash_icon.png" className="w-8 h-8 object-contain" alt="Trash" />, color: "bg-white/10" },
 ];
 
 export const WALLPAPER_PRESETS = [

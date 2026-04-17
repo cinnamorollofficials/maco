@@ -32,7 +32,7 @@ const TrashContent: React.FC<TrashContentProps> = ({ items, onEmpty, onPutBack }
           >
             <div className="w-16 h-16 flex items-center justify-center">
               {item.type === 'folder' ? (
-                <Folder size={40} className="text-blue-400 fill-blue-500/30 opacity-60" />
+                <img src="/folder-icon-macos.png" className="w-10 h-10 object-contain opacity-60" alt="folder" />
               ) : (
                 <div className="w-12 h-12 bg-white/5 border border-white/5 rounded-lg flex items-center justify-center opacity-60">
                   {item.icon}
@@ -51,7 +51,7 @@ const TrashContent: React.FC<TrashContentProps> = ({ items, onEmpty, onPutBack }
 
         {items.length === 0 && (
           <div className="col-span-full h-full flex flex-col items-center justify-center text-white/20 mt-10">
-            <Trash2 size={64} className="opacity-10 mb-2" />
+            <img src="/trash_icon.png" className="w-16 h-16 object-contain opacity-20 mb-2" alt="empty trash" />
             <span className="text-sm">Trash is Empty</span>
           </div>
         )}

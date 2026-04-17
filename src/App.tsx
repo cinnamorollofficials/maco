@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
+import { Folder, Trash2 } from "lucide-react";
 
 // Types & Constants
 import { WindowState, DesktopItem } from "./types";
@@ -40,6 +41,7 @@ export default function App() {
   const [notes, setNotes] = useState<string>("Welcome to Notes!\n\nYou can use this app to jot down your ideas.");
   const [weatherCondition, setWeatherCondition] = useState({ temp: 28, condition: "Sunny" });
   const [finderFiles, setFinderFiles] = useState(INITIAL_MOCK_FILES);
+  const isSelecting = useRef(false);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -59,14 +61,14 @@ export default function App() {
       id: "finder-desktop", 
       type: "folder", 
       label: "Documents", 
-      icon: <img src="https://help.apple.com/assets/650346761A4EBFDE620FA81F/65034677A0E648B17A00B7F8/en_US/c65511dc47d2f93d39697960fa0192e4.png" className="w-full h-full" alt="folder" />,
+      icon: <img src="/folder-icon-macos.png" className="w-14 h-14 object-contain shadow-sm" alt="folder" />,
       onClick: () => openApp('finder', { initialPath: 'Documents' })
     },
     { 
       id: "trash-desktop", 
       type: "file", 
       label: "Trash", 
-      icon: <img src="https://help.apple.com/assets/650346761A4EBFDE620FA81F/65034677A0E648B17A00B7F8/en_US/733979ea019056641e7f339efbe934bb.png" className="w-full h-full" alt="trash" />,
+      icon: <img src="/trash_icon.png" className="w-14 h-14 object-contain" alt="trash" />,
       onClick: () => openApp('trash')
     }
   ]);
@@ -213,6 +215,11 @@ export default function App() {
     const current = { x: e.clientX, y: e.clientY };
     setSelection(prev => prev ? { ...prev, current } : null);
 
+    // If moved more than 5px, it's a marquee selection
+    if (Math.abs(current.x - selection.start.x) > 5 || Math.abs(current.y - selection.start.y) > 5) {
+      isSelecting.current = true;
+    }
+
     const rect = {
       x1: selection.start.x,
       y1: selection.start.y,
@@ -248,7 +255,7 @@ export default function App() {
       id: newId,
       type: 'folder',
       label: 'untitled folder',
-      icon: <img src="https://help.apple.com/assets/650346761A4EBFDE620FA81F/65034677A0E648B17A00B7F8/en_US/c65511dc47d2f93d39697960fa0192e4.png" className="w-full h-full" alt="folder" />,
+      icon: <img src="/folder-icon-macos.png" className="w-14 h-14 object-contain shadow-sm" alt="folder" />,
       onClick: () => openApp('finder', { initialPath: 'untitled folder' })
     };
     setDesktopItems(prev => [...prev, newFolder]);
@@ -277,7 +284,14 @@ export default function App() {
       ref={desktopRef}
       className="fixed inset-0 overflow-hidden bg-cover bg-center transition-all duration-700 ease-in-out"
       style={{ backgroundImage: wallpaper.startsWith('linear-gradient') ? wallpaper : `url(${wallpaper})` }}
-      onClick={() => { setContextMenu(null); setSelectedIds([]); setEditingId(null); }}
+      onClick={() => { 
+        if (!isSelecting.current) {
+          setContextMenu(null); 
+          setSelectedIds([]); 
+          setEditingId(null); 
+        }
+        isSelecting.current = false;
+      }}
       onContextMenu={handleContextMenu}
       onMouseDown={handleSelectionStart}
       onMouseMove={handleSelectionMove}

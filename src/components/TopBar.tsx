@@ -16,7 +16,8 @@ const TopBar = () => {
       onMouseDown={(e) => e.stopPropagation()}
     >
       <div className="flex items-center gap-4">
-        <Apple size={14} className="fill-white" />
+        {/* <Apple size={14} className="fill-white" /> */}
+        <img src="/apple_logo_white.png" alt="Apple Logo" className="w-[14px] h-[14px] object-contain" />
         <span className="font-bold">Finder</span>
         <span className="opacity-80 font-normal">File</span>
         <span className="opacity-80 font-normal">Edit</span>
