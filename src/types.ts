@@ -2,6 +2,7 @@ import React from 'react';
 
 export interface WindowState {
   id: string;
+  appId: string;
   title: string;
   icon: React.ReactNode;
   isOpen: boolean;

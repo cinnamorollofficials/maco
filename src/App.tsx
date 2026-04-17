@@ -115,7 +115,14 @@ export default function App() {
       type: "file", 
       label: "My_Profile.pdf", 
       icon: <FileText className="w-12 h-12 text-red-500" />,
-      onClick: () => openApp('preview')
+      onClick: () => openApp('preview', { title: 'My_Profile.pdf' })
+    },
+    { 
+      id: "portfolio-desktop", 
+      type: "file", 
+      label: "Portofolio Hadi 2026.pdf", 
+      icon: <FileText className="w-12 h-12 text-orange-500" />,
+      onClick: () => openApp('preview', { title: 'Portofolio Hadi 2026.pdf', pdfPath: '/Portofolio Hadi 2026.pdf' })
     },
     { 
       id: "trash-desktop", 
@@ -169,9 +176,9 @@ export default function App() {
   }, [windows, activeWindow, desktopItems]);
 
   const renderAppContent = (window: WindowState) => {
-    const { id, config } = window;
+    const { appId, config } = window;
     
-    switch (id) {
+    switch (appId) {
       case 'terminal':
         return <TerminalContent files={finderFiles} isFocused={activeWindow === 'terminal'} />;
       case 'chrome':
@@ -181,7 +188,7 @@ export default function App() {
       case 'music':
         return <MusicContent />;
       case 'preview':
-        return <PDFPreviewContent />;
+        return <PDFPreviewContent app={window} />;
       case 'image_preview':
         return <ImagePreviewContent />;
       case 'finder':
@@ -213,7 +220,7 @@ export default function App() {
     }
   };
 
-  const openApp = (appId: string, options?: { initialPath?: string }) => {
+  const openApp = (appId: string, config?: any) => {
     if (appId === 'launchpad') {
       setIsLaunchpadOpen(prev => !prev);
       return;
@@ -224,29 +231,31 @@ export default function App() {
     const appInfo = APPS.find(a => a.id === appId);
     if (!appInfo) return;
 
+    // Unique ID if title is provided to allow multiple instances (e.g., Preview)
+    const windowId = config?.title ? `${appId}-${config.title}` : appId;
+    const windowTitle = config?.title || appInfo.title;
+
     setWindows(prev => {
-      const existingIndex = prev.findIndex(w => w.id === appId);
+      const existingIndex = prev.findIndex(w => w.id === windowId);
       const maxZ = Math.max(...prev.map(w => w.zIndex), 0);
 
       if (existingIndex !== -1) {
         const next = [...prev];
         const existingWindow = next[existingIndex];
         next.splice(existingIndex, 1);
-        // Important: Update config even for existing windows so initialPath changes work
         next.push({ 
           ...existingWindow, 
           isMinimized: false, 
           zIndex: maxZ + 1,
-          config: options || existingWindow.config 
+          config: config || existingWindow.config 
         });
         return next;
       }
       return prev;
     });
 
-    const isAlreadyOpen = windows.some(w => w.id === appId);
-    if (isAlreadyOpen) {
-      setActiveWindow(appId);
+    if (windows.some(w => w.id === windowId)) {
+      setActiveWindow(windowId);
       return;
     }
 
@@ -254,23 +263,23 @@ export default function App() {
     
     setTimeout(() => {
       setWindows(prev => {
-        const alreadyInPrev = prev.findIndex(w => w.id === appId);
-        if (alreadyInPrev !== -1) return prev; // Avoid duplicates
+        const alreadyInPrev = prev.findIndex(w => w.id === windowId);
+        if (alreadyInPrev !== -1) return prev;
 
         const maxZ = Math.max(...prev.map(w => w.zIndex), 0);
-        const newWindow: WindowState = {
-          id: appInfo.id,
-          title: appInfo.title,
-          icon: appInfo.icon,
-          isOpen: true,
-          isMinimized: false,
+        return [...prev, { 
+          id: windowId, 
+          appId: appId,
+          title: windowTitle, 
+          icon: appInfo.icon, 
+          isOpen: true, 
+          isMinimized: false, 
           zIndex: maxZ + 1,
-          config: options
-        };
-        return [...prev, newWindow];
+          config 
+        }];
       });
       
-      setActiveWindow(appId);
+      setActiveWindow(windowId);
       setLaunchingApps(prev => prev.filter(id => id !== appId));
     }, 800);
   };
