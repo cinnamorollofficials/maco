@@ -1,7 +1,11 @@
 import React, { useState, useEffect } from "react";
 import { Apple, Wifi, Search, Volume2, Battery } from "lucide-react";
 
-const TopBar = () => {
+interface TopBarProps {
+  activeAppTitle?: string;
+}
+
+const TopBar: React.FC<TopBarProps> = ({ activeAppTitle = "Finder" }) => {
   const [time, setTime] = useState(new Date());
 
   useEffect(() => {
@@ -16,8 +20,8 @@ const TopBar = () => {
       onMouseDown={(e) => e.stopPropagation()}
     >
       <div className="flex items-center gap-4">
-        <img src="/apple_logo_white.png" alt="Apple Logo" className="w-[14px] h-[14px] object-contain" />
-        <span className="font-bold">Finder</span>
+        <Apple size={14} className="fill-white" />
+        <span className="font-bold">{activeAppTitle}</span>
         <span className="opacity-80 font-normal">File</span>
         <span className="opacity-80 font-normal">Edit</span>
         <span className="opacity-80 font-normal">View</span>

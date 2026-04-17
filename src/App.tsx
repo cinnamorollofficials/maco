@@ -15,6 +15,8 @@ import Window from "./components/Window";
 import ContextMenu from "./components/ContextMenu";
 import CalendarWidget from "./components/CalendarWidget";
 import WeatherWidget from "./components/WeatherWidget";
+import Spotlight from "./components/Spotlight";
+import Launchpad from "./components/Launchpad";
 
 // App Contents
 import FinderContent from "./components/apps/FinderContent";
@@ -32,29 +34,40 @@ export default function App() {
   const [isBooted, setIsBooted] = useState(false);
   const [windows, setWindows] = useState<WindowState[]>([]);
   const [activeWindow, setActiveWindow] = useState<string | null>(null);
+  const [isSpotlightOpen, setIsSpotlightOpen] = useState(false);
+  const [isLaunchpadOpen, setIsLaunchpadOpen] = useState(false);
   const [launchingApps, setLaunchingApps] = useState<string[]>([]);
-  const [wallpaper, setWallpaper] = useState("https://512pixels.net/downloads/macos-wallpapers-6k/26-Tahoe-Dark-6K.png");
+  const [wallpaper, setWallpaper] = useState(() => 
+    localStorage.getItem('tahoe-wallpaper') || "https://512pixels.net/downloads/macos-wallpapers-6k/26-Tahoe-Dark-6K.png"
+  );
   const [contextMenu, setContextMenu] = useState<{ x: number, y: number } | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [selection, setSelection] = useState<{ start: { x: number, y: number }, current: { x: number, y: number } } | null>(null);
   const [trashItems, setTrashItems] = useState<any[]>([]);
-  const [notes, setNotes] = useState<Note[]>([
-    {
-      id: '1',
-      title: 'Welcome to Notes',
-      content: 'Welcome to Notes!\n\nYou can use this app to jot down your ideas.',
-      lastModified: Date.now()
-    },
-    {
-      id: '2',
-      title: 'Pro Tips',
-      content: '• Double click icons to open apps\n• Drag icons to rearrange them\n• Right click for context menu',
-      lastModified: Date.now() - 1000 * 60 * 60
-    }
-  ]);
+  const [notes, setNotes] = useState<Note[]>(() => {
+    const saved = localStorage.getItem('tahoe-notes');
+    return saved ? JSON.parse(saved) : [
+      {
+        id: '1',
+        title: 'Welcome to Notes',
+        content: 'Welcome to Notes!\n\nYou can use this app to jot down your ideas.',
+        lastModified: Date.now()
+      },
+      {
+        id: '2',
+        title: 'Pro Tips',
+        content: '• Double click icons to open apps\n• Drag icons to rearrange them\n• Right click for context menu',
+        lastModified: Date.now() - 1000 * 60 * 60
+      }
+    ];
+  });
+
+  const [finderFiles, setFinderFiles] = useState(() => {
+    const saved = localStorage.getItem('tahoe-files');
+    return saved ? JSON.parse(saved) : INITIAL_MOCK_FILES;
+  });
   const [weatherCondition, setWeatherCondition] = useState({ temp: 28, condition: "Sunny" });
-  const [finderFiles, setFinderFiles] = useState(INITIAL_MOCK_FILES);
   const isSelecting = useRef(false);
 
   useEffect(() => {
@@ -68,6 +81,18 @@ export default function App() {
     }, 30000);
     return () => clearInterval(interval);
   }, []);
+
+  useEffect(() => {
+    localStorage.setItem('tahoe-wallpaper', wallpaper);
+  }, [wallpaper]);
+
+  useEffect(() => {
+    localStorage.setItem('tahoe-notes', JSON.stringify(notes));
+  }, [notes]);
+
+  useEffect(() => {
+    localStorage.setItem('tahoe-files', JSON.stringify(finderFiles));
+  }, [finderFiles]);
 
   const trashRef = useRef<HTMLDivElement>(null);
   const [desktopItems, setDesktopItems] = useState<DesktopItem[]>([
@@ -113,6 +138,11 @@ export default function App() {
           const nextIndex = (currentIndex + 1) % windows.length;
           focusApp(windows[nextIndex].id);
         }
+      }
+
+      if (e.metaKey && e.key === ' ') {
+        e.preventDefault();
+        setIsSpotlightOpen(prev => !prev);
       }
 
       // Arrow navigation for desktop
@@ -184,6 +214,13 @@ export default function App() {
   };
 
   const openApp = (appId: string, options?: { initialPath?: string }) => {
+    if (appId === 'launchpad') {
+      setIsLaunchpadOpen(prev => !prev);
+      return;
+    }
+    
+    setIsLaunchpadOpen(false);
+    setIsSpotlightOpen(false);
     const appInfo = APPS.find(a => a.id === appId);
     if (!appInfo) return;
 
@@ -320,10 +357,9 @@ export default function App() {
   };
 
   const handleSelectionStart = (e: React.MouseEvent) => {
+    // Only allow left click (button 0) for selection marquee to avoid right-click interference
     if (e.button !== 0) return;
-    isSelecting.current = false;
     
-    // Start selection if clicking directly on the desktop or a non-interactive area
     const target = e.target as HTMLElement;
     const isInteractive = target.closest('button') || target.closest('input') || target.closest('textarea') || target.closest('.desktop-icon');
     
@@ -409,6 +445,8 @@ export default function App() {
     return <BootScreen onComplete={() => setIsBooted(true)} />;
   }
 
+  const activeAppTitle = activeWindow ? APPS.find(a => a.id === activeWindow)?.title : "Finder";
+
   return (
   <>
     <div 
@@ -427,7 +465,7 @@ export default function App() {
       onMouseMove={handleSelectionMove}
       onMouseUp={handleSelectionEnd}
     >
-      <TopBar />
+      <TopBar activeAppTitle={activeAppTitle} />
 
       {/* Widgets Layer */}
       <div className="absolute top-[60px] left-[60px] flex flex-col gap-6 pointer-events-none">
@@ -493,6 +531,57 @@ export default function App() {
           )
         ))}
       </AnimatePresence>
+
+      {/* Launching Animation */}
+      <AnimatePresence>
+        {launchingApps.map(appId => (
+          <motion.div
+            key={appId}
+            initial={{ scale: 0.8, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            exit={{ scale: 0.8, opacity: 0 }}
+            className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none z-[10000]"
+          >
+            <div className="w-24 h-24 bg-white/10 backdrop-blur-md rounded-2xl flex items-center justify-center p-4">
+              <img 
+                src={APPS.find(a => a.id === appId)?.icon.props.src} 
+                className="w-full h-full object-contain animate-bounce" 
+                alt="launching" 
+              />
+            </div>
+          </motion.div>
+        ))}
+      </AnimatePresence>
+
+      {/* Spotlight */}
+      <Spotlight 
+        isOpen={isSpotlightOpen} 
+        onClose={() => setIsSpotlightOpen(false)} 
+        apps={APPS} 
+        onOpenApp={openApp} 
+      />
+
+      {/* Launchpad */}
+      <Launchpad
+        isOpen={isLaunchpadOpen}
+        onClose={() => setIsLaunchpadOpen(false)}
+        apps={APPS}
+        onOpenApp={openApp}
+      />
+
+      {/* Context Menu */}
+      {contextMenu && (
+        <ContextMenu 
+          x={contextMenu.x} 
+          y={contextMenu.y} 
+          onClose={() => setContextMenu(null)}
+          onCreateFolder={createFolder}
+          onChangeWallpaper={() => {
+            openApp('wallpaper_settings');
+            setContextMenu(null);
+          }}
+        />
+      )}
 
       {/* Dock Area */}
       <div 

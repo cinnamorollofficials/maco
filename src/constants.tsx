@@ -71,6 +71,7 @@ export const INITIAL_MOCK_FILES: Record<string, any[]> = {
 };
 
 export const APPS = [
+  { id: "launchpad", title: "Launchpad", icon: <img src="/launchpad_icon.png" className="w-12 h-12 object-contain" alt="Launchpad" />, color: "bg-white/10", category: "system" },
   { id: "finder", title: "Finder", icon: <img src="/macos_finder_dark.webp" className="w-12 h-12 object-contain" alt="Finder" />, color: "bg-blue-500/10", category: "system" },
   { id: "notes", title: "Notes", icon: <img src="/macos_notes.webp" className="w-10 h-10 object-contain" alt="Notes" />, color: "bg-yellow-100", category: "productivity" },
   { id: "music", title: "Music", icon: <img src="/macos_music.webp" className="w-12 h-12 object-contain" alt="Music" />, color: "bg-pink-500/10", category: "media" },
