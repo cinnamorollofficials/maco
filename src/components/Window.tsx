@@ -1,4 +1,4 @@
-import React, { useState, useRef, useCallback } from "react";
+import React, { useState, useRef, useCallback, useEffect } from "react";
 import { X, Minus, Maximize2 } from "lucide-react";
 import { WindowState } from "../types";
 
@@ -21,10 +21,20 @@ const Window: React.FC<WindowProps> = ({
   children
 }) => {
   const [isMaximized, setIsMaximized] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
   const [position, setPosition] = useState({ x: 100, y: 80 });
   const [size] = useState({ w: 640, h: 420 });
   const isDragging = useRef(false);
   const dragOffset = useRef({ x: 0, y: 0 });
+
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   const handleMaximize = () => {
     setIsMaximized(prev => !prev);
@@ -56,15 +66,17 @@ const Window: React.FC<WindowProps> = ({
     isDragging.current = false;
   }, []);
 
-  const windowStyle: React.CSSProperties = isMaximized 
+  const effectiveMaximized = isMaximized || isMobile;
+
+  const windowStyle: React.CSSProperties = effectiveMaximized 
     ? {
         position: 'fixed',
-        top: 24,
+        top: isMobile ? 0 : 24,
         left: 0,
         right: 0,
         bottom: 0,
-        width: 'auto',
-        height: 'auto',
+        width: '100vw',
+        height: isMobile ? '100vh' : 'calc(100vh - 24px)',
         borderRadius: 0,
         zIndex,
         boxSizing: 'border-box'
@@ -104,18 +116,22 @@ const Window: React.FC<WindowProps> = ({
           >
             <X size={8} className="text-black/60 opacity-0 group-hover/traffic:opacity-100" />
           </button>
-          <button 
-            onClick={(e) => { e.stopPropagation(); onMinimize(); }}
-            className="w-3 h-3 rounded-full bg-[#ffbd2e] border border-black/10 flex items-center justify-center transition-colors hover:bg-[#ffbd2e]/80"
-          >
-            <Minus size={8} className="text-black/60 opacity-0 group-hover/traffic:opacity-100" />
-          </button>
-          <button 
-            onClick={(e) => { e.stopPropagation(); handleMaximize(); }}
-            className="w-3 h-3 rounded-full bg-[#27c93f] border border-black/10 flex items-center justify-center transition-colors hover:bg-[#27c93f]/80"
-          >
-            <Maximize2 size={8} className="text-black/60 opacity-0 group-hover/traffic:opacity-100" />
-          </button>
+          {!isMobile && (
+            <>
+              <button 
+                onClick={(e) => { e.stopPropagation(); onMinimize(); }}
+                className="w-3 h-3 rounded-full bg-[#ffbd2e] border border-black/10 flex items-center justify-center transition-colors hover:bg-[#ffbd2e]/80"
+              >
+                <Minus size={8} className="text-black/60 opacity-0 group-hover/traffic:opacity-100" />
+              </button>
+              <button 
+                onClick={(e) => { e.stopPropagation(); handleMaximize(); }}
+                className="w-3 h-3 rounded-full bg-[#27c93f] border border-black/10 flex items-center justify-center transition-colors hover:bg-[#27c93f]/80"
+              >
+                <Maximize2 size={8} className="text-black/60 opacity-0 group-hover/traffic:opacity-100" />
+              </button>
+            </>
+          )}
         </div>
         
         <div className="flex-1 flex justify-center pointer-events-none">

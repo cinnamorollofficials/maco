@@ -8,6 +8,8 @@ interface PDFPreviewContentProps {
 
 const PDFPreviewContent: React.FC<PDFPreviewContentProps> = ({ app }) => {
   const pdfPath = app?.config?.pdfPath;
+  // Add toolbar=0 to the PDF path to hide browser native controls and make it look cleaner
+  const cleanPdfPath = pdfPath ? `${pdfPath}#toolbar=0&navpanes=0` : null;
 
   return (
     <div className="flex flex-col h-full bg-[#1e1e1e]">
@@ -34,11 +36,11 @@ const PDFPreviewContent: React.FC<PDFPreviewContentProps> = ({ app }) => {
         </div>
       </div>
 
-      <div className="flex-1 overflow-auto bg-[#1a1a1a] flex justify-center p-4">
-        {pdfPath ? (
+      <div className="flex-1 overflow-hidden bg-[#1a1a1a] flex justify-center">
+        {cleanPdfPath ? (
           <iframe 
-            src={pdfPath} 
-            className="w-full h-full rounded-sm border border-white/10 shadow-2xl bg-white"
+            src={cleanPdfPath} 
+            className="w-full h-full border-none"
             title="PDF Preview"
           />
         ) : (

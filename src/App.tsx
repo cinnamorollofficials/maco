@@ -476,14 +476,14 @@ export default function App() {
     >
       <TopBar activeAppTitle={activeAppTitle} />
 
-      {/* Widgets Layer */}
-      <div className="absolute top-[60px] left-[60px] flex flex-col gap-6 pointer-events-none">
+      {/* Widgets Layer - Hidden on Mobile */}
+      <div className="hidden md:flex absolute top-[60px] left-[60px] flex-col gap-6 pointer-events-none">
         <CalendarWidget />
         <WeatherWidget weatherCondition={weatherCondition} />
       </div>
 
       {/* Desktop Icons */}
-      <div className="absolute top-[40px] right-4 bottom-[100px] w-[120px] grid grid-rows-[repeat(auto-fill,110px)] gap-2 content-start justify-items-center p-4 pointer-events-none">
+      <div className="absolute top-[40px] right-4 bottom-[100px] w-auto max-h-[80vh] flex flex-col flex-wrap-reverse gap-2 content-start justify-items-center p-4 pointer-events-none">
         {desktopItems.map((item) => (
           <div key={item.id} className="pointer-events-auto">
             <DesktopIcon 
@@ -594,12 +594,12 @@ export default function App() {
 
       {/* Dock Area */}
       <div 
-        className="fixed bottom-[12px] left-1/2 -translate-x-1/2 z-[2000] w-fit"
+        className="fixed bottom-[12px] left-1/2 -translate-x-1/2 z-[2000] w-fit max-w-[95vw]"
         onClick={(e) => e.stopPropagation()}
         onMouseDown={(e) => e.stopPropagation()}
       >
         <motion.div 
-          className="tahoe-glass rounded-[24px] p-2 flex items-end gap-1 px-3 pb-2 shadow-2xl relative"
+          className="tahoe-glass rounded-[24px] p-2 flex items-end gap-1 px-3 pb-2 shadow-2xl relative overflow-x-auto no-scrollbar scroll-smooth"
         >
           {APPS.filter(app => !(app as any).hidden).map((app, index) => {
             const nextApp = APPS[index + 1];

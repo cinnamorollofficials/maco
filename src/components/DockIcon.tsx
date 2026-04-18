@@ -66,9 +66,9 @@ const DockIcon = React.forwardRef<HTMLDivElement, DockIconProps>(({ app, onClick
         onClick={handleClick}
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
-        className={`w-14 h-14 bg-transparent flex items-center justify-center cursor-default transition-all duration-300 ${isMinimized ? 'opacity-70 scale-90' : ''}`}
+        className={`w-10 h-10 md:w-14 md:h-14 bg-transparent flex items-center justify-center cursor-default transition-all duration-300 ${isMinimized ? 'opacity-70 scale-90' : ''}`}
       >
-        <div className="w-16 h-16 flex items-center justify-center pointer-events-none drop-shadow-[0_8px_16px_rgba(0,0,0,0.4)]">
+        <div className="w-12 h-12 md:w-16 md:h-16 flex items-center justify-center pointer-events-none drop-shadow-[0_8px_16px_rgba(0,0,0,0.4)]">
           {app.icon}
         </div>
       </motion.div>

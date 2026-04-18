@@ -28,7 +28,7 @@ const Launchpad: React.FC<LaunchpadProps> = ({ isOpen, onClose, apps, onOpenApp 
             transition={{ type: "spring", damping: 30, stiffness: 200 }}
             className="w-full max-w-6xl px-10"
           >
-            <div className="grid grid-cols-4 md:grid-cols-6 lg:grid-cols-7 gap-x-8 gap-y-12">
+            <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-7 gap-x-4 md:gap-x-8 gap-y-8 md:gap-y-12">
               {displayApps.map((app, index) => (
                 <motion.div
                   key={app.id}
@@ -40,14 +40,14 @@ const Launchpad: React.FC<LaunchpadProps> = ({ isOpen, onClose, apps, onOpenApp 
                     onOpenApp(app.id);
                     onClose();
                   }}
-                  className="flex flex-col items-center gap-3 group cursor-default"
+                  className="flex flex-col items-center gap-2 md:gap-3 group cursor-default"
                 >
-                  <div className="w-20 h-20 md:w-24 md:h-24 lg:w-28 lg:h-28 flex items-center justify-center transition-transform duration-300 group-hover:scale-110 active:scale-95 drop-shadow-[0_10px_20px_rgba(0,0,0,0.3)]">
-                    <div className="w-full h-full [&_img]:w-full [&_img]:h-full [&_svg]:w-14 [&_svg]:h-14">
+                  <div className="w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 lg:w-28 lg:h-28 flex items-center justify-center transition-transform duration-300 group-hover:scale-110 active:scale-95 drop-shadow-[0_10px_20px_rgba(0,0,0,0.3)]">
+                    <div className="w-full h-full [&_img]:w-full [&_img]:h-full [&_svg]:w-10 sm:[&_svg]:w-14">
                       {app.icon}
                     </div>
                   </div>
-                  <span className="text-white text-[14px] font-medium tracking-wide drop-shadow-md opacity-80 group-hover:opacity-100 transition-opacity">
+                  <span className="text-white text-[12px] md:text-[14px] font-medium tracking-wide drop-shadow-md opacity-80 group-hover:opacity-100 transition-opacity text-center line-clamp-1 px-1">
                     {app.title}
                   </span>
                 </motion.div>
