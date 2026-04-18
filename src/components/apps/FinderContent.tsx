@@ -247,7 +247,7 @@ const FinderContent: React.FC<FinderContentProps> = ({
                   } else {
                     const fileName = (file.name || file.label || "").toLowerCase();
                     if (fileName.endsWith('.pdf')) {
-                      onOpenApp('preview');
+                      onOpenApp('preview', { title: file.name || file.label, pdfPath: `/${file.name || file.label}` });
                     } else if (fileName.endsWith('.png') || fileName.endsWith('.jpg')) {
                       onOpenApp('image_preview');
                     } else if (fileName === 'safari.app') {

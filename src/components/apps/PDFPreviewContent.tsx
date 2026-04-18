@@ -8,8 +8,15 @@ interface PDFPreviewContentProps {
 
 const PDFPreviewContent: React.FC<PDFPreviewContentProps> = ({ app }) => {
   const pdfPath = app?.config?.pdfPath;
-  // Add toolbar=0 to the PDF path to hide browser native controls and make it look cleaner
   const cleanPdfPath = pdfPath ? `${pdfPath}#toolbar=0&navpanes=0` : null;
+  const [isMobile, setIsMobile] = React.useState(false);
+
+  React.useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 1024);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   return (
     <div className="flex flex-col h-full bg-[#1e1e1e]">
@@ -36,30 +43,30 @@ const PDFPreviewContent: React.FC<PDFPreviewContentProps> = ({ app }) => {
         </div>
       </div>
 
-      <div className="flex-1 overflow-hidden bg-[#1a1a1a] flex justify-center">
-        {cleanPdfPath ? (
+      <div className="flex-1 overflow-auto bg-[#1a1a1a] flex justify-center p-4">
+        {cleanPdfPath && !isMobile ? (
           <iframe 
             src={cleanPdfPath} 
             className="w-full h-full border-none"
             title="PDF Preview"
           />
         ) : (
-          <div className="w-[500px] h-[700px] bg-white shadow-2xl flex flex-col p-12 text-gray-800 font-serif relative shrink-0">
+          <div className="w-full max-w-[800px] h-fit min-h-[1000px] bg-white shadow-2xl flex flex-col p-6 md:p-12 text-gray-800 font-serif relative shrink-0 mb-8">
             <div className="absolute top-0 left-0 w-full h-1 bg-blue-500" />
-            <h1 className="text-3xl font-bold mb-2">JOSHUA GUNAWAN</h1>
-            <p className="text-blue-600 font-sans text-sm mb-8 tracking-widest uppercase">Senior Software Engineer</p>
+            <h1 className="text-2xl md:text-3xl font-bold mb-2 uppercase tracking-tight">{app?.config?.title?.replace('.pdf', '') || "DOCUMENT PREVIEW"}</h1>
+            <p className="text-blue-600 font-sans text-[10px] md:text-sm mb-6 md:mb-8 tracking-widest uppercase">{app?.config?.title?.includes('Portfolio') ? 'Graphic & UX Designer' : 'Senior Software Engineer'}</p>
             
-            <div className="space-y-6 overflow-hidden">
+            <div className="space-y-6">
               <section>
                 <h2 className="text-sm font-bold border-b border-gray-200 pb-1 mb-3 uppercase tracking-wider">Experience</h2>
                 <div className="space-y-4">
                   <div>
-                    <div className="flex justify-between font-sans text-[12px] font-bold">
+                    <div className="flex justify-between font-sans text-[11px] md:text-[12px] font-bold">
                       <span>Tech Giant Corp</span>
                       <span>2020 - Present</span>
                     </div>
-                    <p className="text-[11px] mt-1 italic">Lead Frontend Developer</p>
-                    <ul className="list-disc list-inside text-[10px] mt-2 space-y-1 text-gray-600 leading-relaxed">
+                    <p className="text-[10px] md:text-[11px] mt-1 italic">Lead Frontend Developer</p>
+                    <ul className="list-disc list-inside text-[9px] md:text-[10px] mt-2 space-y-1 text-gray-600 leading-relaxed">
                       <li>Architected high-performance macOS-style web interfaces using React and Framer Motion.</li>
                       <li>Optimized rendering performance by 40% through advanced memoization techniques.</li>
                       <li>Led a team of 12 engineers in developing a scalable design system.</li>
@@ -70,7 +77,7 @@ const PDFPreviewContent: React.FC<PDFPreviewContentProps> = ({ app }) => {
 
               <section>
                 <h2 className="text-sm font-bold border-b border-gray-200 pb-1 mb-3 uppercase tracking-wider">Education</h2>
-                <div className="font-sans text-[11px]">
+                <div className="font-sans text-[10px] md:text-[11px]">
                   <div className="flex justify-between font-bold">
                     <span>University of Technology</span>
                     <span>2014 - 2018</span>

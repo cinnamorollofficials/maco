@@ -29,7 +29,8 @@ const Window: React.FC<WindowProps> = ({
 
   useEffect(() => {
     const checkMobile = () => {
-      setIsMobile(window.innerWidth < 768);
+      // Treat anything below 1024px as mobile/tablet for fullscreen behavior
+      setIsMobile(window.innerWidth < 1024);
     };
     checkMobile();
     window.addEventListener('resize', checkMobile);
@@ -71,12 +72,12 @@ const Window: React.FC<WindowProps> = ({
   const windowStyle: React.CSSProperties = effectiveMaximized 
     ? {
         position: 'fixed',
-        top: isMobile ? 0 : 24,
+        top: 0,
         left: 0,
         right: 0,
         bottom: 0,
         width: '100vw',
-        height: isMobile ? '100vh' : 'calc(100vh - 24px)',
+        height: '100vh',
         borderRadius: 0,
         zIndex,
         boxSizing: 'border-box'

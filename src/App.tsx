@@ -17,6 +17,7 @@ import CalendarWidget from "./components/CalendarWidget";
 import WeatherWidget from "./components/WeatherWidget";
 import Spotlight from "./components/Spotlight";
 import Launchpad from "./components/Launchpad";
+import HomeIndicator from "./components/HomeIndicator";
 
 // App Contents
 import FinderContent from "./components/apps/FinderContent";
@@ -129,7 +130,7 @@ export default function App() {
       type: "file", 
       label: "My_Profile.pdf", 
       icon: <FileText className="w-12 h-12 text-red-500" />,
-      onClick: () => openApp('preview', { title: 'My_Profile.pdf' })
+      onClick: () => openApp('preview', { title: 'My_Profile.pdf', pdfPath: '/My_Profile.pdf' })
     },
     { 
       id: "portfolio-desktop", 
@@ -452,6 +453,13 @@ export default function App() {
     setEditingId(null);
   };
 
+  const goHome = () => {
+    setWindows(prev => prev.map(w => ({ ...w, isMinimized: true })));
+    setActiveWindow(null);
+    setIsLaunchpadOpen(false);
+    setIsSpotlightOpen(false);
+  };
+
   const handleContextMenu = (e: React.MouseEvent<HTMLDivElement>) => {
     e.preventDefault();
     setContextMenu({ x: e.clientX, y: e.clientY });
@@ -651,6 +659,8 @@ export default function App() {
           />
         </motion.div>
       </div>
+      {/* Home Indicator for Mobile/Tablet */}
+      <HomeIndicator onClick={goHome} />
     </div>
   </>
   );
