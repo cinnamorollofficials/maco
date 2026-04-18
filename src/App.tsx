@@ -38,7 +38,7 @@ export default function App() {
   const [isLaunchpadOpen, setIsLaunchpadOpen] = useState(false);
   const [launchingApps, setLaunchingApps] = useState<string[]>([]);
   const [wallpaper, setWallpaper] = useState(() => 
-    localStorage.getItem('tahoe-wallpaper') || "https://512pixels.net/downloads/macos-wallpapers-6k/26-Tahoe-Dark-6K.png"
+    localStorage.getItem('tahoe-wallpaper') || "https://512pixels.net/wp-content/uploads/2025/06/13-Ventura-Light-thumb.jpg"
   );
   const [contextMenu, setContextMenu] = useState<{ x: number, y: number } | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -64,6 +64,13 @@ export default function App() {
   });
 
   const [finderFiles, setFinderFiles] = useState(() => {
+    // Migration: Clear old files if they contain non-serializable React elements
+    const version = localStorage.getItem('tahoe-v');
+    if (version !== '2') {
+      localStorage.removeItem('tahoe-files');
+      localStorage.setItem('tahoe-v', '2');
+    }
+    
     const saved = localStorage.getItem('tahoe-files');
     return saved ? JSON.parse(saved) : INITIAL_MOCK_FILES;
   });
@@ -111,6 +118,13 @@ export default function App() {
       onClick: () => openApp('finder', { initialPath: 'Experience' })
     },
     { 
+      id: "certificate-desktop", 
+      type: "folder", 
+      label: "Certificate", 
+      icon: <img src="/folder-icon-macos.png" className="w-14 h-14 object-contain shadow-sm" alt="folder" />,
+      onClick: () => openApp('finder', { initialPath: 'Certificate' })
+    },
+    { 
       id: "cv-desktop", 
       type: "file", 
       label: "My_Profile.pdf", 
@@ -124,13 +138,6 @@ export default function App() {
       icon: <FileText className="w-12 h-12 text-orange-500" />,
       onClick: () => openApp('preview', { title: 'Portofolio Hadi 2026.pdf', pdfPath: '/Portofolio Hadi 2026.pdf' })
     },
-    { 
-      id: "trash-desktop", 
-      type: "file", 
-      label: "Trash", 
-      icon: <img src="/trash_icon.png" className="w-14 h-14 object-contain" alt="trash" />,
-      onClick: () => openApp('trash')
-    }
   ]);
 
   const desktopRef = useRef<HTMLDivElement>(null);
@@ -213,7 +220,7 @@ export default function App() {
           />
         );
       case 'wallpaper_settings':
-        return <WallpaperSettingsContent currentWallpaper={wallpaper} onSelectWallpaper={setWallpaper} />;
+        return <WallpaperSettingsContent current={wallpaper} onSelect={setWallpaper} />;
       default:
         const appInfo = APPS.find(a => a.id === id);
         return <MockAppContent id={id} name={appInfo?.title || 'App'} />;
@@ -594,12 +601,12 @@ export default function App() {
 
       {/* Dock Area */}
       <div 
-        className="fixed bottom-[12px] left-1/2 -translate-x-1/2 z-[2000] w-fit max-w-[95vw]"
+        className="fixed bottom-[12px] left-1/2 -translate-x-1/2 z-[2000] w-fit max-w-[95vw] overflow-hidden rounded-[24px]"
         onClick={(e) => e.stopPropagation()}
         onMouseDown={(e) => e.stopPropagation()}
       >
         <motion.div 
-          className="tahoe-glass rounded-[24px] p-2 flex items-end gap-1 px-3 pb-2 shadow-2xl relative overflow-x-auto no-scrollbar scroll-smooth"
+          className="tahoe-glass p-2 flex items-end gap-1 px-3 pb-2 shadow-2xl relative overflow-x-auto no-scrollbar scroll-smooth"
         >
           {APPS.filter(app => !(app as any).hidden).map((app, index) => {
             const nextApp = APPS[index + 1];
@@ -610,7 +617,13 @@ export default function App() {
                 {app.id !== 'trash' && (
                   <DockIcon 
                     app={app} 
-                    onClick={() => openApp(app.id)} 
+                    onClick={() => {
+                      if (windows.some(w => w.id === app.id)) {
+                        closeApp(app.id);
+                      } else {
+                        openApp(app.id);
+                      }
+                    }} 
                     isOpen={windows.some(w => w.id === app.id)}
                     isMinimized={windows.find(w => w.id === app.id)?.isMinimized}
                     isLaunching={launchingApps.includes(app.id)}
@@ -626,7 +639,13 @@ export default function App() {
           <DockIcon 
             ref={trashRef}
             app={APPS.find(a => a.id === 'trash')!} 
-            onClick={() => openApp('trash')} 
+            onClick={() => {
+              if (windows.some(w => w.id === 'trash')) {
+                closeApp('trash');
+              } else {
+                openApp('trash');
+              }
+            }} 
             isOpen={windows.some(w => w.id === 'trash')}
             isMinimized={windows.find(w => w.id === 'trash')?.isMinimized}
           />

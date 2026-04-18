@@ -14,81 +14,81 @@ import {
 } from "lucide-react";
 
 export const WALLPAPERS = [
+  { name: "Ventura", url: "https://512pixels.net/wp-content/uploads/2025/06/13-Ventura-Light-thumb.jpg" },
 { name: "Tahoe Dark", url: "https://512pixels.net/downloads/macos-wallpapers-6k/26-Tahoe-Dark-6K.png" },
   { name: "Tahoe Blue", url: "https://images.unsplash.com/photo-1477346611705-65d1883cee1e?auto=format&fit=crop&q=80&w=2070" },
   { name: "Monterey", url: "https://512pixels.net/wp-content/uploads/2025/06/12-Light-thumbnail.jpg" },
   { name: "Big Sur", url: "https://512pixels.net/wp-content/uploads/2025/06/11-0-Color-Night-thumbnails.jpg" },
   { name: "Catalina", url: "https://512pixels.net/wp-content/uploads/2025/06/10-15-Day-thumb.jpg" },
   { name: "Tahoe Beach Day", url: "https://512pixels.net/wp-content/uploads/2025/08/26-Tahoe-Beach-Day-thumb.jpeg" },
-  { name: "Ventura", url: "https://512pixels.net/wp-content/uploads/2025/06/13-Ventura-Light-thumb.jpg" },
 ];
 
 export const INITIAL_MOCK_FILES: Record<string, any[]> = {
   "Recents": [
-    { id: "f-1", name: "Presentation.pptx", type: "file", icon: <FileText className="text-orange-400" /> },
-    { id: "f-2", name: "Invoice_04.pdf", type: "file", icon: <FileText className="text-red-400" /> },
-    { id: "f-3", name: "Screenshot.png", type: "file", icon: <ImageIcon className="text-blue-400" /> },
+    { id: "f-1", name: "Presentation.pptx", type: "file", icon: { identifier: 'file-text', color: "text-orange-400" } },
+    { id: "f-2", name: "Invoice_04.pdf", type: "file", icon: { identifier: 'file-text', color: "text-red-400" } },
+    { id: "f-3", name: "Screenshot.png", type: "file", icon: { identifier: 'image', color: "text-blue-400" } },
   ],
   "Applications": [
-    { id: "a-1", name: "Safari.app", type: "file", icon: <Compass className="text-blue-400" /> },
-    { id: "a-2", name: "Music.app", type: "file", icon: <Music className="text-pink-500" /> },
-    { id: "a-3", name: "Terminal.app", type: "file", icon: <Terminal className="text-gray-100" /> },
+    { id: "a-1", name: "Safari.app", type: "file", icon: { identifier: 'compass', color: "text-blue-400" } },
+    { id: "a-2", name: "Music.app", type: "file", icon: { identifier: 'music', color: "text-pink-500" } },
+    { id: "a-3", name: "Terminal.app", type: "file", icon: { identifier: 'terminal', color: "text-gray-100" } },
   ],
   "Documents": [
     { id: "folder-1", name: "Work Projects", type: "folder" },
     { id: "folder-2", name: "Personal", type: "folder" },
-    { id: "f-4", name: "Resume_2024.pdf", type: "file", icon: <FileText className="text-blue-400" /> },
-    { id: "f-5", name: "Budget.xlsx", type: "file", icon: <FileText className="text-green-500" /> },
+    { id: "f-4", name: "Resume_2024.pdf", type: "file", icon: { identifier: 'file-text', color: "text-blue-400" } },
+    { id: "f-5", name: "Budget.xlsx", type: "file", icon: { identifier: 'file-text', color: "text-green-500" } },
   ],
   "Documents/Work Projects": [
     { id: "folder-3", name: "Alpha_Release", type: "folder" },
-    { id: "f-6", name: "Specs.txt", type: "file", icon: <FileText className="text-gray-400" /> },
+    { id: "f-6", name: "Specs.txt", type: "file", icon: { identifier: 'file-text', color: "text-gray-400" } },
   ],
   "Documents/Work Projects/Alpha_Release": [
-    { id: "f-7", name: "build_logs.txt", type: "file", icon: <FileText className="text-gray-400" /> },
-    { id: "f-8", name: "alpha_screenshot.png", type: "file", icon: <ImageIcon className="text-blue-400" /> },
+    { id: "f-7", name: "build_logs.txt", type: "file", icon: { identifier: 'file-text', color: "text-gray-400" } },
+    { id: "f-8", name: "alpha_screenshot.png", type: "file", icon: { identifier: 'image', color: "text-blue-400" } },
   ],
   "Documents/Personal": [
     { id: "folder-4", name: "Holiday_Photos", type: "folder" },
-    { id: "f-9", name: "Bucket_List.txt", type: "file", icon: <FileText className="text-gray-400" /> },
+    { id: "f-9", name: "Bucket_List.txt", type: "file", icon: { identifier: 'file-text', color: "text-gray-400" } },
   ],
   "Downloads": [
-    { id: "f-10", name: "macos_sonoma.dmg", type: "file", icon: <FileText className="text-gray-400" /> },
-    { id: "f-11", name: "archive.zip", type: "file", icon: <FileText className="text-yellow-500" /> },
+    { id: "f-10", name: "macos_sonoma.dmg", type: "file", icon: { identifier: 'file-text', color: "text-gray-400" } },
+    { id: "f-11", name: "archive.zip", type: "file", icon: { identifier: 'file-text', color: "text-yellow-500" } },
   ],
   "iCloud Drive": [
     { id: "folder-5", name: "Shared Documents", type: "folder" },
-    { id: "f-12", name: "Backup_Config", type: "file", icon: <Settings className="text-gray-500" /> },
+    { id: "f-12", name: "Backup_Config", type: "file", icon: { identifier: 'settings', color: "text-gray-500" } },
   ],
   "Project": [
     { id: "p-1", name: "Web_Desktop_V1", type: "folder" },
-    { id: "p-2", name: "AI_Agent_Logic.js", type: "file", icon: <FileText className="text-yellow-500" /> },
+    { id: "p-2", name: "AI_Agent_Logic.js", type: "file", icon: { identifier: 'file-text', color: "text-yellow-500" } },
   ],
   "Experience": [
-    { id: "e-1", name: "Google_DeepMind.docx", type: "file", icon: <FileText className="text-blue-500" /> },
-    { id: "e-2", name: "React_Lead_Role.txt", type: "file", icon: <FileText className="text-gray-400" /> },
+    { id: "e-1", name: "Google_DeepMind.docx", type: "file", icon: { identifier: 'file-text', color: "text-blue-500" } },
+    { id: "e-2", name: "React_Lead_Role.txt", type: "file", icon: { identifier: 'file-text', color: "text-gray-400" } },
   ]
 };
 
 export const APPS = [
-  { id: "launchpad", title: "Launchpad", icon: <img src="/launchpad_icon.png" className="w-12 h-12 object-contain" alt="Launchpad" />, color: "bg-white/10", category: "system" },
-  { id: "finder", title: "Finder", icon: <img src="/macos_finder_dark.webp" className="w-12 h-12 object-contain" alt="Finder" />, color: "bg-blue-500/10", category: "system" },
-  { id: "notes", title: "Notes", icon: <img src="/macos_notes.webp" className="w-10 h-10 object-contain" alt="Notes" />, color: "bg-yellow-100", category: "productivity" },
-  { id: "music", title: "Music", icon: <img src="/macos_music.webp" className="w-12 h-12 object-contain" alt="Music" />, color: "bg-pink-500/10", category: "media" },
-  { id: "preview", title: "Preview", icon: <img src="/macos_preview.webp" className="w-12 h-12 object-contain" alt="Preview" />, color: "bg-orange-500/10", category: "media" },
-  { id: "terminal", title: "Terminal", icon: <img src="/macos_terminal.webp" className="w-12 h-12 object-contain" alt="Terminal" />, color: "bg-black", category: "system_tools" },
-  { id: "trash", title: "Trash", icon: <img src="/trash_icon.png" className="w-12 h-12 object-contain" alt="Trash" />, color: "bg-white/10", category: "system" },
+  { id: "launchpad", title: "Launchpad", icon: <img src="/macos_launchpad.png" className="w-12 h-12 object-contain" alt="Launchpad" draggable="false" />, color: "bg-white/10", category: "system" },
+  { id: "finder", title: "Finder", icon: <img src="/macos_finder_dark.webp" className="w-12 h-12 object-contain" alt="Finder" draggable="false" />, color: "bg-blue-500/10", category: "system" },
+  { id: "notes", title: "Notes", icon: <img src="/macos_notes.webp" className="w-10 h-10 object-contain" alt="Notes" draggable="false" />, color: "bg-yellow-100", category: "productivity" },
+  { id: "music", title: "Music", icon: <img src="/macos_music.webp" className="w-12 h-12 object-contain" alt="Music" draggable="false" />, color: "bg-pink-500/10", category: "media" },
+  { id: "preview", title: "Preview", icon: <img src="/macos_preview.webp" className="w-12 h-12 object-contain" alt="Preview" draggable="false" />, color: "bg-orange-500/10", category: "media" },
+  { id: "terminal", title: "Terminal", icon: <img src="/macos_terminal.webp" className="w-12 h-12 object-contain" alt="Terminal" draggable="false" />, color: "bg-black", category: "system_tools" },
+  { id: "trash", title: "Trash", icon: <img src="/trash_icon.png" className="w-12 h-12 object-contain" alt="Trash" draggable="false" />, color: "bg-white/10", category: "system" },
   { id: "wallpaper_settings", title: "Wallpaper Settings", icon: <Monitor className="text-blue-400" />, color: "bg-blue-500/10", category: "system", hidden: true },
 ];
 
 export const WALLPAPER_PRESETS = [
+  { name: "Ventura", url: "https://512pixels.net/wp-content/uploads/2025/06/13-Ventura-Light-thumb.jpg" },
   { name: "Tahoe Dark", url: "https://512pixels.net/downloads/macos-wallpapers-6k/26-Tahoe-Dark-6K.png" },
   { name: "Tahoe Blue", url: "https://images.unsplash.com/photo-1477346611705-65d1883cee1e?auto=format&fit=crop&q=80&w=2070" },
   { name: "Monterey", url: "https://512pixels.net/wp-content/uploads/2025/06/12-Light-thumbnail.jpg" },
   { name: "Big Sur", url: "https://512pixels.net/wp-content/uploads/2025/06/11-0-Color-Night-thumbnails.jpg" },
   { name: "Catalina", url: "https://512pixels.net/wp-content/uploads/2025/06/10-15-Day-thumb.jpg" },
   { name: "Tahoe Beach Day", url: "https://512pixels.net/wp-content/uploads/2025/08/26-Tahoe-Beach-Day-thumb.jpeg" },
-  { name: "Ventura", url: "https://512pixels.net/wp-content/uploads/2025/06/13-Ventura-Light-thumb.jpg" },
 ];
 
 export const GRADIENTS = [

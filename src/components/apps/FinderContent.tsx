@@ -9,6 +9,7 @@ import {
   Trash2
 } from "lucide-react";
 import { motion } from "motion/react";
+import FileIcon from "../FileIcon";
 
 interface FinderContentProps {
   onOpenApp: (appId: string, options?: any) => void;
@@ -265,14 +266,15 @@ const FinderContent: React.FC<FinderContentProps> = ({
                 <motion.div 
                   drag={!isTrash}
                   dragMomentum={false}
+                  whileDrag={{ zIndex: 10000 }}
                   onDragEnd={(_, info) => !isTrash && onMoveToTrash(file, currentPath, info.point)}
                   className="w-16 h-16 flex items-center justify-center transition-transform group-active:scale-95 z-20"
                 >
                   {file.type === 'folder' ? (
-                    <img src="/folder-icon-macos.png" className="w-12 h-12 object-contain" alt="folder" />
+                    <img src="/folder-icon-macos.png" className="w-12 h-12 object-contain" alt="folder" draggable="false" />
                   ) : (
                     <div className="w-12 h-12 bg-white/5 border border-white/5 rounded-lg flex items-center justify-center group-hover:bg-white/10 shadow-sm transition-colors">
-                      {file.icon}
+                      <FileIcon icon={file.icon} />
                     </div>
                   )}
                 </motion.div>
