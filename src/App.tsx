@@ -65,11 +65,11 @@ export default function App() {
   });
 
   const [finderFiles, setFinderFiles] = useState(() => {
-    // Migration: Clear old files if they contain non-serializable React elements
+    // Migration: v3 clears all previous mock files to start with empty folders
     const version = localStorage.getItem('tahoe-v');
-    if (version !== '2') {
+    if (version !== '3') {
       localStorage.removeItem('tahoe-files');
-      localStorage.setItem('tahoe-v', '2');
+      localStorage.setItem('tahoe-v', '3');
     }
     
     const saved = localStorage.getItem('tahoe-files');
@@ -124,13 +124,6 @@ export default function App() {
       label: "Certificate", 
       icon: <img src="/folder-icon-macos.png" className="w-14 h-14 object-contain shadow-sm" alt="folder" />,
       onClick: () => openApp('finder', { initialPath: 'Certificate' })
-    },
-    { 
-      id: "cv-desktop", 
-      type: "file", 
-      label: "My_Profile.pdf", 
-      icon: <FileText className="w-12 h-12 text-red-500" />,
-      onClick: () => openApp('preview', { title: 'My_Profile.pdf', pdfPath: '/My_Profile.pdf' })
     },
     { 
       id: "portfolio-desktop", 
@@ -223,8 +216,8 @@ export default function App() {
       case 'wallpaper_settings':
         return <WallpaperSettingsContent current={wallpaper} onSelect={setWallpaper} />;
       default:
-        const appInfo = APPS.find(a => a.id === id);
-        return <MockAppContent id={id} name={appInfo?.title || 'App'} />;
+        const appInfo = APPS.find(a => a.id === appId);
+        return <MockAppContent id={appId} name={appInfo?.title || 'App'} />;
     }
   };
 

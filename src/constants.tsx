@@ -24,50 +24,14 @@ export const WALLPAPERS = [
 ];
 
 export const INITIAL_MOCK_FILES: Record<string, any[]> = {
-  "Recents": [
-    { id: "f-1", name: "Presentation.pptx", type: "file", icon: { identifier: 'file-text', color: "text-orange-400" } },
-    { id: "f-2", name: "Invoice_04.pdf", type: "file", icon: { identifier: 'file-text', color: "text-red-400" } },
-    { id: "f-3", name: "Screenshot.png", type: "file", icon: { identifier: 'image', color: "text-blue-400" } },
-  ],
-  "Applications": [
-    { id: "a-1", name: "Safari.app", type: "file", icon: { identifier: 'compass', color: "text-blue-400" } },
-    { id: "a-2", name: "Music.app", type: "file", icon: { identifier: 'music', color: "text-pink-500" } },
-    { id: "a-3", name: "Terminal.app", type: "file", icon: { identifier: 'terminal', color: "text-gray-100" } },
-  ],
-  "Documents": [
-    { id: "folder-1", name: "Work Projects", type: "folder" },
-    { id: "folder-2", name: "Personal", type: "folder" },
-    { id: "f-4", name: "Resume_2024.pdf", type: "file", icon: { identifier: 'file-text', color: "text-blue-400" } },
-    { id: "f-5", name: "Budget.xlsx", type: "file", icon: { identifier: 'file-text', color: "text-green-500" } },
-  ],
-  "Documents/Work Projects": [
-    { id: "folder-3", name: "Alpha_Release", type: "folder" },
-    { id: "f-6", name: "Specs.txt", type: "file", icon: { identifier: 'file-text', color: "text-gray-400" } },
-  ],
-  "Documents/Work Projects/Alpha_Release": [
-    { id: "f-7", name: "build_logs.txt", type: "file", icon: { identifier: 'file-text', color: "text-gray-400" } },
-    { id: "f-8", name: "alpha_screenshot.png", type: "file", icon: { identifier: 'image', color: "text-blue-400" } },
-  ],
-  "Documents/Personal": [
-    { id: "folder-4", name: "Holiday_Photos", type: "folder" },
-    { id: "f-9", name: "Bucket_List.txt", type: "file", icon: { identifier: 'file-text', color: "text-gray-400" } },
-  ],
-  "Downloads": [
-    { id: "f-10", name: "macos_sonoma.dmg", type: "file", icon: { identifier: 'file-text', color: "text-gray-400" } },
-    { id: "f-11", name: "archive.zip", type: "file", icon: { identifier: 'file-text', color: "text-yellow-500" } },
-  ],
-  "iCloud Drive": [
-    { id: "folder-5", name: "Shared Documents", type: "folder" },
-    { id: "f-12", name: "Backup_Config", type: "file", icon: { identifier: 'settings', color: "text-gray-500" } },
-  ],
-  "Project": [
-    { id: "p-1", name: "Web_Desktop_V1", type: "folder" },
-    { id: "p-2", name: "AI_Agent_Logic.js", type: "file", icon: { identifier: 'file-text', color: "text-yellow-500" } },
-  ],
-  "Experience": [
-    { id: "e-1", name: "Google_DeepMind.docx", type: "file", icon: { identifier: 'file-text', color: "text-blue-500" } },
-    { id: "e-2", name: "React_Lead_Role.txt", type: "file", icon: { identifier: 'file-text', color: "text-gray-400" } },
-  ]
+  "Recents": [],
+  "Applications": [],
+  "Documents": [],
+  "Downloads": [],
+  "iCloud Drive": [],
+  "Project": [],
+  "Experience": [],
+  "Certificate": [],
 };
 
 export const APPS = [
