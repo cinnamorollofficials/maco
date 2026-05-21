@@ -12,11 +12,11 @@ interface WindowProps {
   children?: React.ReactNode;
 }
 
-const Window: React.FC<WindowProps> = ({ 
-  app, 
-  onClose, 
-  onMinimize, 
-  zIndex, 
+const Window: React.FC<WindowProps> = ({
+  app,
+  onClose,
+  onMinimize,
+  zIndex,
   onFocus,
   children
 }) => {
@@ -52,7 +52,7 @@ const Window: React.FC<WindowProps> = ({
     if (isMaximized) return;
     // Don't start drag if clicking a button
     if ((e.target as HTMLElement).closest('button')) return;
-    
+
     isDragging.current = true;
     // Use positionRef to always read the latest position without stale closure
     dragOffset.current = {
@@ -76,31 +76,34 @@ const Window: React.FC<WindowProps> = ({
 
   const effectiveMaximized = isMaximized || isMobile;
 
-  const windowStyle: React.CSSProperties = effectiveMaximized 
+  // TopBar height is 24px — offset maximized window so its header is never hidden
+  const TOP_BAR_HEIGHT = 24;
+
+  const windowStyle: React.CSSProperties = effectiveMaximized
     ? {
-        position: 'fixed',
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
-        width: '100vw',
-        height: '100vh',
-        borderRadius: 0,
-        zIndex,
-        boxSizing: 'border-box'
-      }
+      position: 'fixed',
+      top: TOP_BAR_HEIGHT,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      width: '100vw',
+      height: `calc(100vh - ${TOP_BAR_HEIGHT}px)`,
+      borderRadius: 0,
+      zIndex,
+      boxSizing: 'border-box'
+    }
     : {
-        position: 'fixed',
-        top: position.y,
-        left: position.x,
-        right: 'auto',
-        bottom: 'auto',
-        width: size.w,
-        height: size.h,
-        borderRadius: 12,
-        zIndex,
-        boxSizing: 'border-box'
-      };
+      position: 'fixed',
+      top: position.y,
+      left: position.x,
+      right: 'auto',
+      bottom: 'auto',
+      width: size.w,
+      height: size.h,
+      borderRadius: 12,
+      zIndex,
+      boxSizing: 'border-box'
+    };
 
   return (
     <div
@@ -113,14 +116,14 @@ const Window: React.FC<WindowProps> = ({
         onFocus();
       }}
     >
-      <div 
+      <div
         className={`h-[38px] flex items-center justify-between px-4 grow-0 shrink-0 bg-white/5 border-b border-white/5 ${!isMaximized ? 'cursor-grab active:cursor-grabbing' : ''}`}
         onPointerDown={handleTitlePointerDown}
         onPointerMove={handleTitlePointerMove}
         onPointerUp={handleTitlePointerUp}
       >
         <div className="flex items-center gap-2 group/traffic">
-          <button 
+          <button
             onClick={(e) => { e.stopPropagation(); onClose(); }}
             className="w-3 h-3 rounded-full bg-[#ff5f56] border border-black/10 flex items-center justify-center transition-colors hover:bg-[#ff5f56]/80"
           >
@@ -128,13 +131,13 @@ const Window: React.FC<WindowProps> = ({
           </button>
           {!isMobile && (
             <>
-              <button 
+              <button
                 onClick={(e) => { e.stopPropagation(); onMinimize(); }}
                 className="w-3 h-3 rounded-full bg-[#ffbd2e] border border-black/10 flex items-center justify-center transition-colors hover:bg-[#ffbd2e]/80"
               >
                 <Minus size={8} className="text-black/60 opacity-0 group-hover/traffic:opacity-100" />
               </button>
-              <button 
+              <button
                 onClick={(e) => { e.stopPropagation(); handleMaximize(); }}
                 className="w-3 h-3 rounded-full bg-[#27c93f] border border-black/10 flex items-center justify-center transition-colors hover:bg-[#27c93f]/80"
               >
@@ -143,7 +146,7 @@ const Window: React.FC<WindowProps> = ({
             </>
           )}
         </div>
-        
+
         <div className="flex-1 flex justify-center pointer-events-none">
           <div className="flex items-center gap-2">
             <div className="flex items-center justify-center w-5 h-5 [&_img]:w-full [&_img]:h-full [&_svg]:w-3.5 [&_svg]:h-3.5 text-white/60">
@@ -152,7 +155,7 @@ const Window: React.FC<WindowProps> = ({
             <span className="text-white/90 text-[13px] font-semibold tracking-tight">{app.title}</span>
           </div>
         </div>
-        
+
         <div className="w-[60px]" />
       </div>
 
