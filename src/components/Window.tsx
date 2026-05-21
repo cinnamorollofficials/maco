@@ -26,6 +26,12 @@ const Window: React.FC<WindowProps> = ({
   const [size] = useState({ w: 640, h: 420 });
   const isDragging = useRef(false);
   const dragOffset = useRef({ x: 0, y: 0 });
+  // Keep a ref in sync with position to avoid stale closures in pointer handlers
+  const positionRef = useRef(position);
+
+  useEffect(() => {
+    positionRef.current = position;
+  }, [position]);
 
   useEffect(() => {
     const checkMobile = () => {
@@ -48,13 +54,14 @@ const Window: React.FC<WindowProps> = ({
     if ((e.target as HTMLElement).closest('button')) return;
     
     isDragging.current = true;
+    // Use positionRef to always read the latest position without stale closure
     dragOffset.current = {
-      x: e.clientX - position.x,
-      y: e.clientY - position.y,
+      x: e.clientX - positionRef.current.x,
+      y: e.clientY - positionRef.current.y,
     };
     (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
     onFocus();
-  }, [isMaximized, position.x, position.y, onFocus]);
+  }, [isMaximized, onFocus]);
 
   const handleTitlePointerMove = useCallback((e: React.PointerEvent) => {
     if (!isDragging.current) return;
@@ -98,7 +105,9 @@ const Window: React.FC<WindowProps> = ({
   return (
     <div
       style={windowStyle}
-      className="flex flex-col bg-[#1c1c1c]/85 backdrop-blur-[30px] shadow-[0_40px_100px_rgba(0,0,0,0.5)] overflow-hidden border border-white/15 transition-[top,left,right,bottom,width,height,border-radius] duration-300 ease-[cubic-bezier(0.25,1,0.5,1)]"
+      // FIX: Removed 'top,left,right,bottom' from transition to prevent drag lag.
+      // Only border-radius and size transitions are kept for maximize/minimize animations.
+      className="flex flex-col bg-[#1c1c1c]/85 backdrop-blur-[30px] shadow-[0_40px_100px_rgba(0,0,0,0.5)] overflow-hidden border border-white/15 transition-[width,height,border-radius] duration-300 ease-[cubic-bezier(0.25,1,0.5,1)]"
       onMouseDown={(e) => {
         e.stopPropagation();
         onFocus();
