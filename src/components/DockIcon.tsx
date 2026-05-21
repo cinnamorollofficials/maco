@@ -23,14 +23,22 @@ const DockIcon = React.forwardRef<HTMLDivElement, DockIconProps>(({ app, onClick
     onClick();
   };
 
+  // FIX: Defined a proper "initial" variant so Framer Motion knows the resting state.
+  // FIX: "launch" now uses repeatType: "loop" with a proper easing so the bounce
+  //      cycles seamlessly without jumping or getting stuck between iterations.
   const animationVariants = {
+    initial: {
+      scale: 1,
+      y: 0,
+    },
     launch: {
-      y: [0, -20, 0],
+      y: [0, -18, 0],
       transition: {
-        duration: 0.5,
-        repeat: 3,
-        ease: "easeInOut"
-      }
+        duration: 0.6,
+        repeat: Infinity,
+        repeatType: "loop" as const,
+        ease: [0.4, 0, 0.2, 1],
+      },
     },
     hover: {
       scale: 1.2,
@@ -38,9 +46,9 @@ const DockIcon = React.forwardRef<HTMLDivElement, DockIconProps>(({ app, onClick
       transition: {
         type: "spring",
         stiffness: 300,
-        damping: 15
-      }
-    }
+        damping: 15,
+      },
+    },
   };
 
   return (
@@ -57,16 +65,18 @@ const DockIcon = React.forwardRef<HTMLDivElement, DockIconProps>(({ app, onClick
           </motion.div>
         )}
       </AnimatePresence>
-      
-      <motion.div 
+
+      <motion.div
         ref={ref}
         variants={animationVariants}
+        // FIX: Framer Motion controls scale/y — removed `transition-all` from className
+        //      to prevent CSS transitions from conflicting with Framer Motion animations.
         animate={isLaunching ? "launch" : isHovered ? "hover" : "initial"}
         whileTap={{ scale: 0.9 }}
         onClick={handleClick}
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
-        className={`w-10 h-10 md:w-14 md:h-14 bg-transparent flex items-center justify-center cursor-default transition-all duration-300 ${isMinimized ? 'opacity-70 scale-90' : ''}`}
+        className={`w-10 h-10 md:w-14 md:h-14 bg-transparent flex items-center justify-center cursor-default ${isMinimized ? "opacity-70 scale-90" : ""}`}
       >
         <div className="w-12 h-12 md:w-16 md:h-16 flex items-center justify-center pointer-events-none drop-shadow-[0_8px_16px_rgba(0,0,0,0.4)]">
           {app.icon}
@@ -75,9 +85,9 @@ const DockIcon = React.forwardRef<HTMLDivElement, DockIconProps>(({ app, onClick
 
       {/* Activation Indicator Dot - Tahoe Style */}
       {isOpen && (
-        <motion.div 
+        <motion.div
           layoutId={`indicator-${app.id}`}
-          className="absolute -bottom-1.5 w-[5px] h-[5px] bg-white rounded-full shadow-[0_0_10px_rgba(255,255,255,0.8),0_0_2px_rgba(255,255,255,1)]" 
+          className="absolute -bottom-1.5 w-[5px] h-[5px] bg-white rounded-full shadow-[0_0_10px_rgba(255,255,255,0.8),0_0_2px_rgba(255,255,255,1)]"
         />
       )}
     </div>
