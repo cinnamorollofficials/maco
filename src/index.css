@@ -46,10 +46,13 @@ body {
 
 /* macOS Tahoe Premium Glass Effect */
 .tahoe-glass {
-  background: rgba(20, 20, 20, 0.4);
-  backdrop-filter: blur(45px) saturate(200%) brightness(1.2);
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.4);
+  background: rgba(25, 25, 25, 0.22);
+  backdrop-filter: blur(28px) saturate(210%) brightness(0.95);
+  border: 1.2px solid rgba(255, 255, 255, 0.18);
+  box-shadow: 
+    0 24px 50px -10px rgba(0, 0, 0, 0.5),
+    inset 0 1.5px 0px 0px rgba(255, 255, 255, 0.15),
+    inset 0 -1.5px 0px 0px rgba(0, 0, 0, 0.1);
 }
 
 .tahoe-dock-divider {

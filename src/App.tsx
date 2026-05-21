@@ -609,12 +609,12 @@ export default function App() {
 
       {/* Dock Area */}
       <div 
-        className="fixed bottom-[12px] left-1/2 -translate-x-1/2 z-[2000] w-fit max-w-[95vw] overflow-hidden rounded-[24px]"
+        className="fixed bottom-[32px] lg:bottom-[12px] left-1/2 -translate-x-1/2 z-[2000] w-fit max-w-[95vw]"
         onClick={(e) => e.stopPropagation()}
         onMouseDown={(e) => e.stopPropagation()}
       >
         <motion.div 
-          className="tahoe-glass p-2 flex items-end gap-1 px-3 pb-2 shadow-2xl relative overflow-x-auto no-scrollbar scroll-smooth"
+          className="tahoe-glass p-2 flex items-end gap-1 px-3 pb-2 rounded-[24px] relative overflow-x-auto no-scrollbar scroll-smooth"
         >
           {APPS.filter(app => !(app as any).hidden).map((app, index) => {
             const nextApp = APPS[index + 1];
