@@ -98,16 +98,18 @@ const TerminalContent: React.FC<TerminalContentProps> = ({ files, isFocused }) =
         break;
       case 'cd':
         const targetDir = args[1];
-        if (!targetDir || targetDir === '~') {
+        if (!targetDir || targetDir === '~' || targetDir === '~/') {
           setCurrentPath("Documents");
         } else if (targetDir === '..') {
-          const parts = currentPath.split('/');
+          const parts = currentPath.split('/').filter(Boolean);
           if (parts.length > 1) {
             parts.pop();
             setCurrentPath(parts.join('/'));
           } else {
             setCurrentPath("Documents");
           }
+        } else if (files[targetDir]) {
+          setCurrentPath(targetDir);
         } else {
           const folders = (files[currentPath] || []).filter(f => f.type === 'folder');
           const found = folders.find(f => f.name.toLowerCase() === targetDir.toLowerCase());
