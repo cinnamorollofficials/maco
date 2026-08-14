@@ -15,21 +15,27 @@ import Window from "./components/Window";
 import ContextMenu from "./components/ContextMenu";
 import CalendarWidget from "./components/CalendarWidget";
 import WeatherWidget from "./components/WeatherWidget";
-import Spotlight from "./components/Spotlight";
-import Launchpad from "./components/Launchpad";
 import HomeIndicator from "./components/HomeIndicator";
 
-// App Contents
-import FinderContent from "./components/apps/FinderContent";
-import SafariContent from "./components/apps/SafariContent";
-import NotesContent from "./components/apps/NotesContent";
-import TerminalContent from "./components/apps/TerminalContent";
-import WallpaperSettingsContent from "./components/apps/WallpaperSettingsContent";
-import PDFPreviewContent from "./components/apps/PDFPreviewContent";
-import ImagePreviewContent from "./components/apps/ImagePreviewContent";
-import MusicContent from "./components/apps/MusicContent";
-import TrashContent from "./components/apps/TrashContent";
-import MockAppContent from "./components/apps/MockAppContent";
+// Lazy-loaded App Contents & Overlays for Performance
+const FinderContent = React.lazy(() => import("./components/apps/FinderContent"));
+const SafariContent = React.lazy(() => import("./components/apps/SafariContent"));
+const NotesContent = React.lazy(() => import("./components/apps/NotesContent"));
+const TerminalContent = React.lazy(() => import("./components/apps/TerminalContent"));
+const WallpaperSettingsContent = React.lazy(() => import("./components/apps/WallpaperSettingsContent"));
+const PDFPreviewContent = React.lazy(() => import("./components/apps/PDFPreviewContent"));
+const ImagePreviewContent = React.lazy(() => import("./components/apps/ImagePreviewContent"));
+const MusicContent = React.lazy(() => import("./components/apps/MusicContent"));
+const TrashContent = React.lazy(() => import("./components/apps/TrashContent"));
+const MockAppContent = React.lazy(() => import("./components/apps/MockAppContent"));
+const Spotlight = React.lazy(() => import("./components/Spotlight"));
+const Launchpad = React.lazy(() => import("./components/Launchpad"));
+
+const WindowLoadingFallback = () => (
+  <div className="flex h-full w-full items-center justify-center bg-[#1e1e1e]/60 backdrop-blur-md">
+    <div className="w-6 h-6 border-2 border-white/20 border-t-white rounded-full animate-spin" />
+  </div>
+);
 
 export default function App() {
   const [isBooted, setIsBooted] = useState(false);
@@ -583,7 +589,9 @@ export default function App() {
               onFocus={() => focusApp(window.id)}
               dragConstraints={desktopRef}
             >
-              {renderAppContent(window)}
+              <React.Suspense fallback={<WindowLoadingFallback />}>
+                {renderAppContent(window)}
+              </React.Suspense>
             </Window>
           )
         ))}
@@ -622,20 +630,24 @@ export default function App() {
       </AnimatePresence>
 
       {/* Spotlight */}
-      <Spotlight 
-        isOpen={isSpotlightOpen} 
-        onClose={() => setIsSpotlightOpen(false)} 
-        apps={APPS} 
-        onOpenApp={openApp} 
-      />
+      <React.Suspense fallback={null}>
+        <Spotlight 
+          isOpen={isSpotlightOpen} 
+          onClose={() => setIsSpotlightOpen(false)} 
+          apps={APPS} 
+          onOpenApp={openApp} 
+        />
+      </React.Suspense>
 
       {/* Launchpad */}
-      <Launchpad
-        isOpen={isLaunchpadOpen}
-        onClose={() => setIsLaunchpadOpen(false)}
-        apps={APPS}
-        onOpenApp={openApp}
-      />
+      <React.Suspense fallback={null}>
+        <Launchpad
+          isOpen={isLaunchpadOpen}
+          onClose={() => setIsLaunchpadOpen(false)}
+          apps={APPS}
+          onOpenApp={openApp}
+        />
+      </React.Suspense>
 
       {/* Context Menu */}
       {contextMenu && (
