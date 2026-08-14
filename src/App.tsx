@@ -108,21 +108,21 @@ export default function App() {
       id: "project-desktop", 
       type: "folder", 
       label: "Project", 
-      icon: <img src="/folder-icon-macos.png" className="w-14 h-14 object-contain shadow-sm" alt="folder" />,
+      icon: <img src="/folder-icon-macos.webp" className="w-14 h-14 object-contain shadow-sm" alt="folder" />,
       onClick: () => openApp('finder', { initialPath: 'Project' })
     },
     { 
       id: "experience-desktop", 
       type: "folder", 
       label: "Experience", 
-      icon: <img src="/folder-icon-macos.png" className="w-14 h-14 object-contain shadow-sm" alt="folder" />,
+      icon: <img src="/folder-icon-macos.webp" className="w-14 h-14 object-contain shadow-sm" alt="folder" />,
       onClick: () => openApp('finder', { initialPath: 'Experience' })
     },
     { 
       id: "certificate-desktop", 
       type: "folder", 
       label: "Certificate", 
-      icon: <img src="/folder-icon-macos.png" className="w-14 h-14 object-contain shadow-sm" alt="folder" />,
+      icon: <img src="/folder-icon-macos.webp" className="w-14 h-14 object-contain shadow-sm" alt="folder" />,
       onClick: () => openApp('finder', { initialPath: 'Certificate' })
     },
     { 
@@ -444,7 +444,7 @@ export default function App() {
       id: newId,
       type: 'folder',
       label: 'untitled folder',
-      icon: <img src="/folder-icon-macos.png" className="w-14 h-14 object-contain shadow-sm" alt="folder" />,
+      icon: <img src="/folder-icon-macos.webp" className="w-14 h-14 object-contain shadow-sm" alt="folder" />,
       onClick: () => openApp('finder', { initialPath: 'untitled folder' })
     };
     setDesktopItems(prev => [...prev, newFolder]);

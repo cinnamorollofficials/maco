@@ -271,7 +271,7 @@ const FinderContent: React.FC<FinderContentProps> = ({
                   className="w-16 h-16 flex items-center justify-center transition-transform group-active:scale-95 z-20"
                 >
                   {file.type === 'folder' ? (
-                    <img src="/folder-icon-macos.png" className="w-12 h-12 object-contain" alt="folder" draggable="false" />
+                    <img src="/folder-icon-macos.webp" className="w-12 h-12 object-contain" alt="folder" draggable="false" />
                   ) : (
                     <div className="w-12 h-12 bg-white/5 border border-white/5 rounded-lg flex items-center justify-center group-hover:bg-white/10 shadow-sm transition-colors">
                       <FileIcon icon={file.icon} />
@@ -295,7 +295,7 @@ const FinderContent: React.FC<FinderContentProps> = ({
           {items.length === 0 && (
             <div className="col-span-full h-full flex flex-col items-center justify-center text-white/30 space-y-2 mt-20">
               <img 
-                src={isTrash ? "/trash_icon.png" : "/folder-icon-macos.png"} 
+                src={isTrash ? "/trash_icon.png" : "/folder-icon-macos.webp"} 
                 className="w-16 h-16 object-contain opacity-20" 
                 alt="empty" 
               />

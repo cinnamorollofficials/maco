@@ -22,7 +22,7 @@ const WallpaperSettingsContent: React.FC<WallpaperSettingsContentProps> = ({ cur
                 onClick={() => onSelect(wp.url)}
                 className={`relative group cursor-pointer overflow-hidden rounded-xl border-2 transition-all ${current === wp.url ? 'border-blue-500 ring-4 ring-blue-500/10' : 'border-white/5 hover:border-white/20'}`}
               >
-                <img src={wp.url} alt={wp.name} className="w-full h-32 object-cover transition-transform group-hover:scale-110" />
+                <img src={wp.url} alt={wp.name} loading="lazy" decoding="async" className="w-full h-32 object-cover transition-transform group-hover:scale-110" />
                 <div className="absolute inset-0 bg-black/20 flex items-end p-2">
                   <span className="text-[11px] font-bold text-white">{wp.name}</span>
                 </div>

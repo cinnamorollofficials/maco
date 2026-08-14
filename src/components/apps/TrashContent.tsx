@@ -52,7 +52,7 @@ const TrashContent: React.FC<TrashContentProps> = ({ items, onEmptyTrash, onPutB
 
                 <div className="w-16 h-16 flex items-center justify-center opacity-60 grayscale-[30%] group-hover:opacity-100 group-hover:grayscale-0 transition-all">
                   {item.type === 'folder' ? (
-                    <img src="/folder-icon-macos.png" className="w-12 h-12 object-contain" alt="folder" />
+                    <img src="/folder-icon-macos.webp" className="w-12 h-12 object-contain" alt="folder" />
                   ) : (
                     <div className="w-12 h-12 bg-white/5 border border-white/5 rounded-lg flex items-center justify-center shadow-sm">
                       {item.icon}
