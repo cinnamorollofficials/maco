@@ -6,10 +6,10 @@ Panduan lengkap dari awal untuk konfigurasi VPS baru (Ubuntu/Debian) hingga depl
 
 ## Daftar Isi
 1. [Langkah 1: Setup Awal & Update Server VPS](#langkah-1-setup-awal--update-server-vps)
-2. [Langkah 2: Install Git, Docker, & Docker Compose](#langkah-2-install-git-docker--docker-compose)
+2. [Langkah 2: Install Git, Nginx, Docker, & Docker Compose](#langkah-2-install-git-nginx-docker--docker-compose)
 3. [Langkah 3: Clone Repository & Deploy Pertama Kali](#langkah-3-clone-repository--deploy-pertama-kali)
 4. [Langkah 4: Alur Update Aplikasi (Git Pull & Rebuild)](#langkah-4-alur-update-aplikasi-git-pull--rebuild)
-5. [Langkah 5 (Opsional): Setup Domain & SSL Gratis (HTTPS)](#langkah-5-opsional-setup-domain--ssl-gratis-https)
+5. [Langkah 5: Konfigurasi Nginx Reverse Proxy & SSL (HTTPS)](#langkah-5-konfigurasi-nginx-reverse-proxy--ssl-https)
 6. [Perintah Maintenance & Troubleshooting](#perintah-maintenance--troubleshooting)
 
 ---
@@ -37,11 +37,21 @@ sudo ufw enable
 
 ---
 
-## Langkah 2: Install Git, Docker, & Docker Compose
+## Langkah 2: Install Git, Nginx, Docker, & Docker Compose
 
-### 1. Install Git & Curl
+### 1. Install Git, Curl, & Nginx Reverse Proxy
 ```bash
-sudo apt install -y git curl wget ufw
+sudo apt install -y git curl wget ufw nginx certbot python3-certbot-nginx
+```
+
+Aktifkan service Nginx agar berjalan otomatis saat boot:
+```bash
+sudo systemctl enable --now nginx
+```
+
+Buka akses Nginx di firewall UFW:
+```bash
+sudo ufw allow 'Nginx Full'
 ```
 
 ### 2. Install Docker Official Engine
@@ -53,12 +63,12 @@ sudo sh get-docker.sh
 
 ### 3. Aktifkan & Jalankan Service Docker
 ```bash
-sudo systemctl enable docker
-sudo systemctl start docker
+sudo systemctl enable --now docker
 ```
 
-### 4. Verifikasi Instalasi Docker
+### 4. Verifikasi Instalasi Nginx & Docker
 ```bash
+nginx -v
 docker --version
 docker compose version
 ```
@@ -149,16 +159,11 @@ chmod +x deploy.sh
 
 ---
 
-## Langkah 5 (Opsional): Setup Domain & SSL Gratis (HTTPS)
+## Langkah 5: Konfigurasi Nginx Reverse Proxy & SSL (HTTPS)
 
-Jika Anda ingin menghubungkan domain (contoh: `maco.domainanda.com`) dan port 80/443 dengan sertifikat SSL gratis dari Let's Encrypt:
+Untuk menghubungkan domain kustom Anda (contoh: `maco.domainanda.com`) dan port 80/443 dengan sertifikat SSL gratis dari Let's Encrypt:
 
-### 1. Install Nginx & Certbot di Host VPS
-```bash
-sudo apt install -y nginx certbot python3-certbot-nginx
-```
-
-### 2. Buat Konfigurasi Reverse Proxy Nginx
+### 1. Buat Konfigurasi Reverse Proxy Nginx
 ```bash
 sudo nano /etc/nginx/sites-available/maco
 ```
