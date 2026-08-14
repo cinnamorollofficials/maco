@@ -82,11 +82,17 @@ export default function App() {
   }, [wallpaper]);
 
   useEffect(() => {
-    localStorage.setItem('tahoe-notes', JSON.stringify(notes));
+    const handler = setTimeout(() => {
+      localStorage.setItem('tahoe-notes', JSON.stringify(notes));
+    }, 400);
+    return () => clearTimeout(handler);
   }, [notes]);
 
   useEffect(() => {
-    localStorage.setItem('tahoe-files', JSON.stringify(finderFiles));
+    const handler = setTimeout(() => {
+      localStorage.setItem('tahoe-files', JSON.stringify(finderFiles));
+    }, 400);
+    return () => clearTimeout(handler);
   }, [finderFiles]);
 
   const trashRef = useRef<HTMLDivElement>(null);
@@ -372,6 +378,8 @@ export default function App() {
     setEditingId(null);
   };
 
+  const rafId = useRef<number | null>(null);
+
   const handleSelectionMove = (e: React.MouseEvent) => {
     if (!selection) return;
     const current = { x: e.clientX, y: e.clientY };
@@ -382,32 +390,36 @@ export default function App() {
       isSelecting.current = true;
     }
 
-    const rect = {
-      x1: selection.start.x,
-      y1: selection.start.y,
-      x2: current.x,
-      y2: current.y
-    };
+    if (rafId.current) cancelAnimationFrame(rafId.current);
+    rafId.current = requestAnimationFrame(() => {
+      const rect = {
+        x1: selection.start.x,
+        y1: selection.start.y,
+        x2: current.x,
+        y2: current.y
+      };
 
-    const xMin = Math.min(rect.x1, rect.x2);
-    const xMax = Math.max(rect.x1, rect.x2);
-    const yMin = Math.min(rect.y1, rect.y2);
-    const yMax = Math.max(rect.y1, rect.y2);
+      const xMin = Math.min(rect.x1, rect.x2);
+      const xMax = Math.max(rect.x1, rect.x2);
+      const yMin = Math.min(rect.y1, rect.y2);
+      const yMax = Math.max(rect.y1, rect.y2);
 
-    const newlySelected: string[] = [];
-    desktopItems.forEach(item => {
-      const el = document.getElementById(`icon-${item.id}`);
-      if (el) {
-        const r = el.getBoundingClientRect();
-        if (r.left < xMax && r.right > xMin && r.top < yMax && r.bottom > yMin) {
-          newlySelected.push(item.id);
+      const newlySelected: string[] = [];
+      desktopItems.forEach(item => {
+        const el = document.getElementById(`icon-${item.id}`);
+        if (el) {
+          const r = el.getBoundingClientRect();
+          if (r.left < xMax && r.right > xMin && r.top < yMax && r.bottom > yMin) {
+            newlySelected.push(item.id);
+          }
         }
-      }
+      });
+      setSelectedIds(newlySelected);
     });
-    setSelectedIds(newlySelected);
   };
 
   const handleSelectionEnd = () => {
+    if (rafId.current) cancelAnimationFrame(rafId.current);
     setSelection(null);
     // Use a small timeout to let the onClick handler run before resetting isSelecting
     setTimeout(() => {
