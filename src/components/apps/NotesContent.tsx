@@ -9,6 +9,19 @@ interface NotesContentProps {
 
 const NotesContent: React.FC<NotesContentProps> = ({ notes, onUpdateNotes }) => {
   const [selectedNoteId, setSelectedNoteId] = useState<string>(notes[0]?.id || '');
+  const [searchQuery, setSearchQuery] = useState<string>('');
+
+  // Synchronize selected note if current note is removed
+  useEffect(() => {
+    if (notes.length > 0 && !notes.some(n => n.id === selectedNoteId)) {
+      setSelectedNoteId(notes[0]?.id || '');
+    }
+  }, [notes, selectedNoteId]);
+
+  const filteredNotes = notes.filter(n => 
+    n.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
+    n.content.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   const selectedNote = notes.find(n => n.id === selectedNoteId);
 
@@ -36,6 +49,7 @@ const NotesContent: React.FC<NotesContentProps> = ({ notes, onUpdateNotes }) => 
     };
     onUpdateNotes([newNote, ...notes]);
     setSelectedNoteId(newNote.id);
+    setSearchQuery('');
   };
 
   const handleDeleteNote = (id: string, e: React.MouseEvent) => {
@@ -57,6 +71,8 @@ const NotesContent: React.FC<NotesContentProps> = ({ notes, onUpdateNotes }) => 
             <input 
               type="text" 
               placeholder="Search" 
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full bg-white/5 border border-transparent focus:border-yellow-500/50 rounded-md py-1 pl-7 pr-2 text-[12px] outline-none transition-all"
             />
           </div>
@@ -69,10 +85,12 @@ const NotesContent: React.FC<NotesContentProps> = ({ notes, onUpdateNotes }) => 
         </div>
 
         <div className="flex-1 overflow-y-auto scrollbar-hide px-2">
-          {notes.length === 0 ? (
-            <div className="text-center mt-10 text-white/20 text-[12px]">No Notes</div>
+          {filteredNotes.length === 0 ? (
+            <div className="text-center mt-10 text-white/20 text-[12px]">
+              {notes.length === 0 ? "No Notes" : "No Matching Notes"}
+            </div>
           ) : (
-            notes.map(note => (
+            filteredNotes.map(note => (
               <div 
                 key={note.id}
                 onClick={() => setSelectedNoteId(note.id)}
