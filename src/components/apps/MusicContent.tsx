@@ -60,15 +60,39 @@ const MusicContent = () => {
   const [progress, setProgress] = useState(35);
   const [volume, setVolume] = useState(75);
 
+  const handleNextTrack = () => {
+    const currentIndex = TRACKS.findIndex(t => t.id === currentTrack.id);
+    const nextIndex = (currentIndex + 1) % TRACKS.length;
+    setCurrentTrack(TRACKS[nextIndex]);
+    setProgress(0);
+  };
+
+  const handlePrevTrack = () => {
+    if (progress > 5) {
+      setProgress(0);
+      return;
+    }
+    const currentIndex = TRACKS.findIndex(t => t.id === currentTrack.id);
+    const prevIndex = (currentIndex - 1 + TRACKS.length) % TRACKS.length;
+    setCurrentTrack(TRACKS[prevIndex]);
+    setProgress(0);
+  };
+
   useEffect(() => {
     let interval: any;
-    if (isPlaying && progress < 100) {
+    if (isPlaying) {
       interval = setInterval(() => {
-        setProgress(prev => Math.min(prev + 0.5, 100));
+        setProgress(prev => {
+          if (prev >= 100) {
+            handleNextTrack();
+            return 0;
+          }
+          return Math.min(prev + 0.5, 100);
+        });
       }, 1000);
     }
     return () => clearInterval(interval);
-  }, [isPlaying, progress]);
+  }, [isPlaying, currentTrack.id]);
 
   return (
     <div className="flex flex-col h-full bg-[#1e1e1e] text-white select-none">
@@ -190,26 +214,40 @@ const MusicContent = () => {
         {/* Center: Controls & Progress */}
         <div className="flex flex-col items-center gap-2 max-w-[40%] flex-1">
           <div className="flex items-center gap-6">
-            <button className="text-white/40 hover:text-white transition-colors"><Shuffle size={14} /></button>
-            <button className="text-white/80 hover:text-white transition-colors" onClick={() => setProgress(0)}><SkipBack size={20} fill="currentColor" /></button>
+            <button className="text-white/40 hover:text-white transition-colors" onClick={() => {
+              const random = TRACKS[Math.floor(Math.random() * TRACKS.length)];
+              setCurrentTrack(random);
+              setProgress(0);
+            }}><Shuffle size={14} /></button>
+            <button className="text-white/80 hover:text-white transition-colors" onClick={handlePrevTrack}><SkipBack size={20} fill="currentColor" /></button>
             <button 
               onClick={() => setIsPlaying(!isPlaying)}
               className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-white/10 transition-colors"
             >
               {isPlaying ? <Pause size={28} fill="currentColor" /> : <Play size={28} fill="currentColor" className="translate-x-0.5" />}
             </button>
-            <button className="text-white/80 hover:text-white transition-colors"><SkipForward size={20} fill="currentColor" /></button>
-            <button className="text-white/40 hover:text-white transition-colors"><Repeat size={14} /></button>
+            <button className="text-white/80 hover:text-white transition-colors" onClick={handleNextTrack}><SkipForward size={20} fill="currentColor" /></button>
+            <button className="text-white/40 hover:text-white transition-colors" onClick={() => setProgress(0)}><Repeat size={14} /></button>
           </div>
           <div className="flex items-center gap-2 w-full max-w-[400px]">
             <span className="text-[10px] text-white/30 font-medium tabular-nums w-8 text-right">
               {Math.floor((progress * 180) / 100 / 60)}:{(Math.floor((progress * 180) / 100) % 60).toString().padStart(2, '0')}
             </span>
-            <div className="flex-1 h-1 bg-white/10 rounded-full relative group cursor-pointer overflow-hidden">
-              <div 
-                className="absolute inset-y-0 left-0 bg-white/60 group-hover:bg-pink-500 rounded-full transition-colors"
-                style={{ width: `${progress}%` }}
-              />
+            <div 
+              onClick={(e) => {
+                const rect = e.currentTarget.getBoundingClientRect();
+                const clickX = e.clientX - rect.left;
+                const newProgress = Math.max(0, Math.min(100, (clickX / rect.width) * 100));
+                setProgress(newProgress);
+              }}
+              className="flex-1 h-2 py-0.5 bg-transparent group cursor-pointer flex items-center"
+            >
+              <div className="w-full h-1 bg-white/10 rounded-full relative overflow-hidden group-hover:h-1.5 transition-all">
+                <div 
+                  className="absolute inset-y-0 left-0 bg-white/60 group-hover:bg-pink-500 rounded-full transition-colors"
+                  style={{ width: `${progress}%` }}
+                />
+              </div>
             </div>
             <span className="text-[10px] text-white/30 font-medium tabular-nums w-8 text-left">
               -{Math.floor(((100 - progress) * 180) / 100 / 60)}:{(Math.floor(((100 - progress) * 180) / 100) % 60).toString().padStart(2, '0')}
@@ -223,11 +261,21 @@ const MusicContent = () => {
           <Share2 size={16} className="hover:text-white cursor-pointer" />
           <div className="flex items-center gap-2 group min-w-[100px]">
             <Volume2 size={16} />
-            <div className="w-[80px] h-1 bg-white/10 rounded-full relative overflow-hidden group-hover:h-1 transition-all">
-              <div 
-                className="absolute inset-y-0 left-0 bg-white/60 group-hover:bg-pink-500"
-                style={{ width: `${volume}%` }}
-              />
+            <div 
+              onClick={(e) => {
+                const rect = e.currentTarget.getBoundingClientRect();
+                const clickX = e.clientX - rect.left;
+                const newVolume = Math.max(0, Math.min(100, (clickX / rect.width) * 100));
+                setVolume(newVolume);
+              }}
+              className="w-[80px] h-2 py-0.5 bg-transparent cursor-pointer flex items-center"
+            >
+              <div className="w-full h-1 bg-white/10 rounded-full relative overflow-hidden group-hover:h-1.5 transition-all">
+                <div 
+                  className="absolute inset-y-0 left-0 bg-white/60 group-hover:bg-pink-500"
+                  style={{ width: `${volume}%` }}
+                />
+              </div>
             </div>
           </div>
         </div>
