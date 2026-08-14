@@ -70,8 +70,15 @@ const Window: React.FC<WindowProps> = ({
     setPosition({ x: newX, y: newY });
   }, []);
 
-  const handleTitlePointerUp = useCallback(() => {
+  const handleTitlePointerUp = useCallback((e: React.PointerEvent) => {
     isDragging.current = false;
+    try {
+      if ((e.currentTarget as HTMLElement)?.hasPointerCapture?.(e.pointerId)) {
+        (e.currentTarget as HTMLElement).releasePointerCapture(e.pointerId);
+      }
+    } catch {
+      // Ignore if capture was already lost
+    }
   }, []);
 
   const effectiveMaximized = isMaximized || isMobile;
@@ -121,6 +128,7 @@ const Window: React.FC<WindowProps> = ({
         onPointerDown={handleTitlePointerDown}
         onPointerMove={handleTitlePointerMove}
         onPointerUp={handleTitlePointerUp}
+        onPointerCancel={handleTitlePointerUp}
       >
         <div className="flex items-center gap-2 group/traffic">
           <button
