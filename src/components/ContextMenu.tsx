@@ -9,10 +9,15 @@ interface ContextMenuProps {
 }
 
 const ContextMenu: React.FC<ContextMenuProps> = ({ x, y, onClose, onCreateFolder, onChangeWallpaper }) => {
+  const MENU_WIDTH = 256;
+  const MENU_HEIGHT = 220;
+  const posX = typeof window !== 'undefined' ? Math.max(8, Math.min(x, window.innerWidth - MENU_WIDTH - 8)) : x;
+  const posY = typeof window !== 'undefined' ? Math.max(30, Math.min(y, window.innerHeight - MENU_HEIGHT - 8)) : y;
+
   return (
     <div 
       className="fixed z-[6000] bg-[#1d1d1f]/70 backdrop-blur-2xl border border-white/20 rounded-xl py-1.5 w-64 shadow-[0_20px_50px_rgba(0,0,0,0.5)] text-[13px] text-white overflow-hidden"
-      style={{ left: x, top: y }}
+      style={{ left: posX, top: posY }}
       onClick={(e) => {
         e.stopPropagation();
         onClose();
