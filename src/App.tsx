@@ -260,6 +260,8 @@ export default function App() {
       return;
     }
 
+    if (launchingApps.includes(appId)) return;
+
     setLaunchingApps(prev => [...prev, appId]);
     
     setTimeout(() => {
@@ -426,6 +428,16 @@ export default function App() {
     }, 10);
   };
 
+  useEffect(() => {
+    if (selection) {
+      const handleGlobalMouseUp = () => {
+        handleSelectionEnd();
+      };
+      window.addEventListener('mouseup', handleGlobalMouseUp);
+      return () => window.removeEventListener('mouseup', handleGlobalMouseUp);
+    }
+  }, [selection]);
+
   const createFolder = () => {
     const newId = `folder-${Date.now()}`;
     const newFolder: DesktopItem = {
@@ -442,7 +454,33 @@ export default function App() {
   };
 
   const handleRename = (id: string, newName: string) => {
-    setDesktopItems(prev => prev.map(item => item.id === id ? { ...item, label: newName } : item));
+    const trimmed = newName.trim();
+    if (!trimmed) {
+      setEditingId(null);
+      return;
+    }
+
+    setDesktopItems(prev => prev.map(item => {
+      if (item.id === id) {
+        return {
+          ...item,
+          label: trimmed,
+          onClick: item.type === 'folder'
+            ? () => openApp('finder', { initialPath: trimmed })
+            : item.onClick
+        };
+      }
+      return item;
+    }));
+
+    setFinderFiles(prev => {
+      const existing = prev[id] || prev[trimmed] || [];
+      return {
+        ...prev,
+        [trimmed]: existing
+      };
+    });
+
     setEditingId(null);
   };
 
@@ -462,7 +500,10 @@ export default function App() {
     return <BootScreen onComplete={() => setIsBooted(true)} />;
   }
 
-  const activeAppTitle = activeWindow ? APPS.find(a => a.id === activeWindow)?.title : "Finder";
+  const activeWinObj = windows.find(w => w.id === activeWindow);
+  const activeAppTitle = activeWinObj 
+    ? activeWinObj.title 
+    : (activeWindow ? (APPS.find(a => a.id === activeWindow)?.title || "Finder") : "Finder");
 
   return (
   <>
@@ -551,23 +592,34 @@ export default function App() {
 
       {/* Launching Animation */}
       <AnimatePresence>
-        {launchingApps.map(appId => (
-          <motion.div
-            key={appId}
-            initial={{ scale: 0.8, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            exit={{ scale: 0.8, opacity: 0 }}
-            className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none z-[10000]"
-          >
-            <div className="w-24 h-24 bg-white/10 backdrop-blur-md rounded-2xl flex items-center justify-center p-4">
-              <img 
-                src={APPS.find(a => a.id === appId)?.icon.props.src} 
-                className="w-full h-full object-contain animate-bounce" 
-                alt="launching" 
-              />
-            </div>
-          </motion.div>
-        ))}
+        {launchingApps.map(appId => {
+          const targetApp = APPS.find(a => a.id === appId);
+          const imgSrc = (targetApp?.icon as any)?.props?.src;
+
+          return (
+            <motion.div
+              key={appId}
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.8, opacity: 0 }}
+              className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none z-[10000]"
+            >
+              <div className="w-24 h-24 bg-white/10 backdrop-blur-md rounded-2xl flex items-center justify-center p-4">
+                {imgSrc ? (
+                  <img 
+                    src={imgSrc} 
+                    className="w-full h-full object-contain animate-bounce" 
+                    alt="launching" 
+                  />
+                ) : (
+                  <div className="w-12 h-12 flex items-center justify-center animate-bounce text-white">
+                    {targetApp?.icon}
+                  </div>
+                )}
+              </div>
+            </motion.div>
+          );
+        })}
       </AnimatePresence>
 
       {/* Spotlight */}
@@ -612,6 +664,8 @@ export default function App() {
           {APPS.filter(app => !(app as any).hidden).map((app, index) => {
             const nextApp = APPS[index + 1];
             const showDivider = nextApp && (app as any).category !== (nextApp as any).category;
+            const targetWin = windows.find(w => w.appId === app.id || w.id === app.id);
+            const isOpen = !!targetWin;
             
             return (
               <React.Fragment key={app.id}>
@@ -619,14 +673,18 @@ export default function App() {
                   <DockIcon 
                     app={app} 
                     onClick={() => {
-                      if (windows.some(w => w.id === app.id)) {
-                        closeApp(app.id);
+                      if (app.id === 'launchpad') {
+                        setIsLaunchpadOpen(prev => !prev);
+                        return;
+                      }
+                      if (targetWin) {
+                        focusApp(targetWin.id);
                       } else {
                         openApp(app.id);
                       }
                     }} 
-                    isOpen={windows.some(w => w.id === app.id)}
-                    isMinimized={windows.find(w => w.id === app.id)?.isMinimized}
+                    isOpen={isOpen}
+                    isMinimized={targetWin?.isMinimized}
                     isLaunching={launchingApps.includes(app.id)}
                   />
                 )}
@@ -637,19 +695,24 @@ export default function App() {
             );
           })}
           <div className="tahoe-dock-divider" />
-          <DockIcon 
-            ref={trashRef}
-            app={APPS.find(a => a.id === 'trash')!} 
-            onClick={() => {
-              if (windows.some(w => w.id === 'trash')) {
-                closeApp('trash');
-              } else {
-                openApp('trash');
-              }
-            }} 
-            isOpen={windows.some(w => w.id === 'trash')}
-            isMinimized={windows.find(w => w.id === 'trash')?.isMinimized}
-          />
+          {(() => {
+            const trashWin = windows.find(w => w.appId === 'trash' || w.id === 'trash');
+            return (
+              <DockIcon 
+                ref={trashRef}
+                app={APPS.find(a => a.id === 'trash')!} 
+                onClick={() => {
+                  if (trashWin) {
+                    focusApp(trashWin.id);
+                  } else {
+                    openApp('trash');
+                  }
+                }} 
+                isOpen={!!trashWin}
+                isMinimized={trashWin?.isMinimized}
+              />
+            );
+          })()}
         </motion.div>
       </div>
       {/* Home Indicator for Mobile/Tablet */}
