@@ -1,0 +1,11 @@
+services:
+  maco-web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: maco-web
+    restart: unless-stopped
+    ports:
+      - "3000:80"
+    environment:
+      - NODE_ENV=production
