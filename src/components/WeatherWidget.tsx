@@ -1,15 +1,30 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { motion } from "motion/react";
 import { Sun, Cloud } from "lucide-react";
 
 interface WeatherWidgetProps {
-  weatherCondition: {
+  initialCondition?: {
     temp: number;
     condition: string;
   };
 }
 
-const WeatherWidget: React.FC<WeatherWidgetProps> = ({ weatherCondition }) => {
+const WeatherWidget: React.FC<WeatherWidgetProps> = ({ 
+  initialCondition = { temp: 28, condition: "Sunny" } 
+}) => {
+  const [weatherCondition, setWeatherCondition] = useState(initialCondition);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setWeatherCondition(prev => {
+        const conditions = ["Sunny", "Cloudy", "Partly Cloudy"];
+        const nextCondition = conditions[Math.floor(Math.random() * conditions.length)];
+        const nextTemp = prev.temp + (Math.random() > 0.5 ? 1 : -1);
+        return { temp: Math.max(20, Math.min(35, nextTemp)), condition: nextCondition };
+      });
+    }, 30000);
+    return () => clearInterval(interval);
+  }, []);
   return (
     <motion.div
       onClick={(e) => e.stopPropagation()}

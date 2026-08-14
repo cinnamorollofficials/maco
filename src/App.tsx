@@ -75,20 +75,7 @@ export default function App() {
     const saved = localStorage.getItem('tahoe-files');
     return saved ? JSON.parse(saved) : INITIAL_MOCK_FILES;
   });
-  const [weatherCondition, setWeatherCondition] = useState({ temp: 28, condition: "Sunny" });
   const isSelecting = useRef(false);
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setWeatherCondition(prev => {
-        const conditions = ["Sunny", "Cloudy", "Partly Cloudy"];
-        const nextCondition = conditions[Math.floor(Math.random() * conditions.length)];
-        const nextTemp = prev.temp + (Math.random() > 0.5 ? 1 : -1);
-        return { temp: Math.max(20, Math.min(35, nextTemp)), condition: nextCondition };
-      });
-    }, 30000);
-    return () => clearInterval(interval);
-  }, []);
 
   useEffect(() => {
     localStorage.setItem('tahoe-wallpaper', wallpaper);
@@ -528,7 +515,7 @@ export default function App() {
       {/* Widgets Layer - Hidden on Mobile */}
       <div className="hidden md:flex absolute top-[60px] left-[60px] flex-col gap-6 pointer-events-none">
         <CalendarWidget />
-        <WeatherWidget weatherCondition={weatherCondition} />
+        <WeatherWidget />
       </div>
 
       {/* Desktop Icons */}
