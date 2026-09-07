@@ -131,7 +131,62 @@ const PDFPreviewContent: React.FC<PDFPreviewContentProps> = ({ app }) => {
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
+  const [isEditingPage, setIsEditingPage] = useState<boolean>(false);
+  const [pageInputVal, setPageInputVal] = useState<string>("1");
+
   const containerRef = useRef<HTMLDivElement | null>(null);
+
+  const scrollToPage = (pageNum: number) => {
+    const target = Math.max(1, Math.min(numPages, pageNum));
+    const el = document.getElementById(`pdf-page-${target}`);
+    if (el) {
+      el.scrollIntoView({ behavior: "smooth", block: "start" });
+      setCurrentPage(target);
+      setPageInputVal(String(target));
+    }
+  };
+
+  const handlePageInputSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const parsed = parseInt(pageInputVal, 10);
+    if (!isNaN(parsed)) {
+      scrollToPage(parsed);
+    }
+    setIsEditingPage(false);
+  };
+
+  const handleZoomIn = () => {
+    setScale((prev) => Math.min(2.5, Math.round((prev + 0.25) * 100) / 100));
+  };
+
+  const handleZoomOut = () => {
+    setScale((prev) => Math.max(0.5, Math.round((prev - 0.25) * 100) / 100));
+  };
+
+  const handleResetZoom = () => {
+    setScale(1.0);
+  };
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (["INPUT", "TEXTAREA"].includes((e.target as HTMLElement)?.tagName)) return;
+
+      if (e.key === "ArrowRight" || e.key === "PageDown") {
+        scrollToPage(currentPage + 1);
+      } else if (e.key === "ArrowLeft" || e.key === "PageUp") {
+        scrollToPage(currentPage - 1);
+      } else if (e.key === "+" || e.key === "=") {
+        handleZoomIn();
+      } else if (e.key === "-") {
+        handleZoomOut();
+      } else if (e.key === "0") {
+        handleResetZoom();
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [currentPage, numPages]);
 
   useEffect(() => {
     let isCancelled = false;
@@ -151,6 +206,7 @@ const PDFPreviewContent: React.FC<PDFPreviewContentProps> = ({ app }) => {
           setPdfDoc(doc);
           setNumPages(doc.numPages);
           setCurrentPage(1);
+          setPageInputVal("1");
           setIsLoading(false);
         }
       } catch (err: any) {
@@ -185,32 +241,81 @@ const PDFPreviewContent: React.FC<PDFPreviewContentProps> = ({ app }) => {
               <Sidebar size={14} />
             </button>
           </div>
-          <div className="flex items-center gap-2 text-white/40 text-[12px]">
+          <div className="flex items-center gap-1.5 text-[12px]">
             <button
-              className="p-1 hover:bg-white/10 rounded disabled:opacity-30 disabled:hover:bg-transparent"
+              onClick={() => scrollToPage(currentPage - 1)}
+              className="p-1 hover:bg-white/10 rounded transition-colors text-white/60 hover:text-white disabled:opacity-30 disabled:hover:bg-transparent"
               disabled={currentPage <= 1}
+              title="Halaman Sebelumnya (←)"
             >
               <ChevronLeft size={14} />
             </button>
-            <span className="bg-black/20 px-2 py-0.5 rounded text-white/60 font-mono">
-              {currentPage} / {numPages}
-            </span>
+            
+            {isEditingPage ? (
+              <form onSubmit={handlePageInputSubmit} className="flex items-center">
+                <input
+                  type="number"
+                  min={1}
+                  max={numPages}
+                  value={pageInputVal}
+                  autoFocus
+                  onChange={(e) => setPageInputVal(e.target.value)}
+                  onBlur={() => {
+                    const parsed = parseInt(pageInputVal, 10);
+                    if (!isNaN(parsed)) scrollToPage(parsed);
+                    setIsEditingPage(false);
+                  }}
+                  className="w-9 bg-black/40 text-center text-white text-[12px] font-mono rounded px-1 py-0.5 border border-blue-500/50 outline-none"
+                />
+                <span className="text-white/40 font-mono ml-1">/ {numPages}</span>
+              </form>
+            ) : (
+              <button
+                onClick={() => {
+                  setPageInputVal(String(currentPage));
+                  setIsEditingPage(true);
+                }}
+                className="bg-black/20 hover:bg-black/40 px-2 py-0.5 rounded text-white/70 hover:text-white font-mono transition-colors cursor-text"
+                title="Klik untuk lompat halaman"
+              >
+                {currentPage} / {numPages}
+              </button>
+            )}
+
             <button
-              className="p-1 hover:bg-white/10 rounded disabled:opacity-30 disabled:hover:bg-transparent"
+              onClick={() => scrollToPage(currentPage + 1)}
+              className="p-1 hover:bg-white/10 rounded transition-colors text-white/60 hover:text-white disabled:opacity-30 disabled:hover:bg-transparent"
               disabled={currentPage >= numPages}
+              title="Halaman Selanjutnya (→)"
             >
               <ChevronRight size={14} />
             </button>
           </div>
         </div>
 
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-3">
           <div className="flex items-center gap-1 bg-white/5 rounded-md p-1">
-            <button className="p-1 hover:bg-white/10 rounded text-white/50" title="Perkecil">
+            <button
+              onClick={handleZoomOut}
+              disabled={scale <= 0.5}
+              className="p-1 hover:bg-white/10 rounded text-white/60 hover:text-white disabled:opacity-30 disabled:hover:bg-transparent transition-colors"
+              title="Perkecil (-)"
+            >
               <ZoomOut size={14} />
             </button>
-            <div className="w-px h-3 bg-white/5 mx-1" />
-            <button className="p-1 hover:bg-white/10 rounded text-white/50" title="Perbesar">
+            <button
+              onClick={handleResetZoom}
+              className="text-[11px] font-mono text-white/60 hover:text-white px-1.5 py-0.5 rounded hover:bg-white/10 transition-colors"
+              title="Reset ke 100% (Tekan 0)"
+            >
+              {Math.round(scale * 100)}%
+            </button>
+            <button
+              onClick={handleZoomIn}
+              disabled={scale >= 2.5}
+              className="p-1 hover:bg-white/10 rounded text-white/60 hover:text-white disabled:opacity-30 disabled:hover:bg-transparent transition-colors"
+              title="Perbesar (+)"
+            >
               <ZoomIn size={14} />
             </button>
           </div>
