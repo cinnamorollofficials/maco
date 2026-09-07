@@ -102,7 +102,7 @@ const TopBar: React.FC<TopBarProps> = ({
             >
               <img 
                 src="/apple_logo_white.png" 
-                className="w-[14px] h-[14px] object-contain" 
+                className="w-4 h-4 object-contain" 
                 alt="Apple" 
               />
             </button>
