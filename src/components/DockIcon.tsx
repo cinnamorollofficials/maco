@@ -53,12 +53,17 @@ const DockIcon = React.forwardRef<HTMLDivElement, DockIconProps>(({ app, onClick
         {isHovered && (
           <motion.div
             initial={{ opacity: 0, y: 4, scale: 0.95 }}
-            animate={{ opacity: 1, y: -8, scale: 1 }}
+            animate={{ opacity: 1, y: -10, scale: 1 }}
             exit={{ opacity: 0, y: 4, scale: 0.95 }}
-            transition={{ duration: 0.15, ease: "easeOut" }}
-            className="absolute -top-10 px-3 py-1 bg-[#1d1d1f]/85 backdrop-blur-xl border border-white/15 rounded-md text-white text-[12px] font-medium tracking-tight whitespace-nowrap shadow-2xl z-50 pointer-events-none select-none"
+            transition={{ duration: 0.12, ease: "easeOut" }}
+            className="absolute -top-11 flex flex-col items-center z-50 pointer-events-none select-none"
           >
-            {app.title}
+            <div className="px-3 py-1 bg-[#1e1e20]/90 backdrop-blur-xl border border-white/15 rounded-md text-white text-[12px] font-medium tracking-tight whitespace-nowrap shadow-[0_4px_16px_rgba(0,0,0,0.45)]">
+              {app.title}
+            </div>
+            <div className="w-2.5 h-1 overflow-hidden -mt-[0.5px]">
+              <div className="w-2 h-2 bg-[#1e1e20]/90 rotate-45 transform origin-top-left translate-x-[3.5px] border-r border-b border-white/15" />
+            </div>
           </motion.div>
         )}
       </AnimatePresence>
