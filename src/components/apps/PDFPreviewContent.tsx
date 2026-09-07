@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useRef } from "react";
-import { Sidebar, ChevronLeft, ChevronRight, ZoomOut, ZoomIn, RotateCw, Share, Download, Loader2, Check } from "lucide-react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
+import { Sidebar, ChevronLeft, ChevronRight, ZoomOut, ZoomIn, RotateCw, Share, Download, Loader2, Check, Maximize2 } from "lucide-react";
 import { WindowState } from "../../types";
 import * as pdfjsLib from "pdfjs-dist";
 
@@ -107,7 +107,7 @@ const PDFPageItem: React.FC<PageItemProps> = ({ pdfDoc, pageNum, scale, rotation
     >
       <div className="relative bg-white shadow-2xl rounded-xs overflow-hidden transition-all duration-200">
         {!isRendered && (
-          <div className="absolute inset-0 bg-neutral-900/10 flex items-center justify-center min-w-[300px] min-h-[400px]">
+          <div className="absolute inset-0 bg-neutral-900/10 flex items-center justify-center min-w-[280px] min-h-[380px]">
             <Loader2 size={24} className="animate-spin text-white/30" />
           </div>
         )}
@@ -123,6 +123,7 @@ const PDFPageItem: React.FC<PageItemProps> = ({ pdfDoc, pageNum, scale, rotation
 interface ThumbnailItemProps {
   pdfDoc: any;
   pageNum: number;
+  rotation: number;
   isActive: boolean;
   onClick: () => void;
 }
@@ -130,10 +131,12 @@ interface ThumbnailItemProps {
 const PDFThumbnailItem: React.FC<ThumbnailItemProps> = ({
   pdfDoc,
   pageNum,
+  rotation,
   isActive,
   onClick,
 }) => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const itemRef = useRef<HTMLButtonElement | null>(null);
   const [isRendered, setIsRendered] = useState(false);
 
   useEffect(() => {
@@ -145,9 +148,9 @@ const PDFThumbnailItem: React.FC<ThumbnailItemProps> = ({
         const page = await pdfDoc.getPage(pageNum);
         if (!isMounted || !canvasRef.current) return;
 
-        const unscaledViewport = page.getViewport({ scale: 1.0 });
+        const unscaledViewport = page.getViewport({ scale: 1.0, rotation });
         const thumbScale = 110 / unscaledViewport.width;
-        const viewport = page.getViewport({ scale: thumbScale });
+        const viewport = page.getViewport({ scale: thumbScale, rotation });
 
         const canvas = canvasRef.current;
         const context = canvas.getContext("2d");
@@ -177,10 +180,18 @@ const PDFThumbnailItem: React.FC<ThumbnailItemProps> = ({
     return () => {
       isMounted = false;
     };
-  }, [pdfDoc, pageNum]);
+  }, [pdfDoc, pageNum, rotation]);
+
+  // Auto-scroll active thumbnail into view
+  useEffect(() => {
+    if (isActive && itemRef.current) {
+      itemRef.current.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    }
+  }, [isActive]);
 
   return (
     <button
+      ref={itemRef}
       onClick={onClick}
       className={`group flex flex-col items-center p-2 rounded-lg transition-all text-center w-full ${
         isActive
@@ -290,14 +301,34 @@ const PDFPreviewContent: React.FC<PDFPreviewContentProps> = ({ app }) => {
     setScale((prev) => Math.max(0.5, Math.round((prev - 0.25) * 100) / 100));
   };
 
+  const handleFitWidth = useCallback(async () => {
+    if (!pdfDoc || !containerRef.current) return;
+    try {
+      const firstPage = await pdfDoc.getPage(1);
+      const unscaled = firstPage.getViewport({ scale: 1.0, rotation });
+      const availableWidth = containerRef.current.clientWidth - 48;
+      if (availableWidth > 200 && unscaled.width > 0) {
+        const fitScale = Math.round((availableWidth / unscaled.width) * 100) / 100;
+        setScale(Math.max(0.5, Math.min(2.5, fitScale)));
+      }
+    } catch {
+      setScale(1.0);
+    }
+  }, [pdfDoc, rotation]);
+
   const handleResetZoom = () => {
-    setScale(1.0);
+    if (scale === 1.0) {
+      handleFitWidth();
+    } else {
+      setScale(1.0);
+    }
   };
 
   const handleRotate = () => {
     setRotation((prev) => (prev + 90) % 360);
   };
 
+  // Keyboard navigation
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (["INPUT", "TEXTAREA"].includes((e.target as HTMLElement)?.tagName)) return;
@@ -311,7 +342,7 @@ const PDFPreviewContent: React.FC<PDFPreviewContentProps> = ({ app }) => {
       } else if (e.key === "-") {
         handleZoomOut();
       } else if (e.key === "0") {
-        handleResetZoom();
+        setScale(1.0);
       } else if (e.key.toLowerCase() === "r" && !e.metaKey && !e.ctrlKey) {
         handleRotate();
       }
@@ -321,6 +352,7 @@ const PDFPreviewContent: React.FC<PDFPreviewContentProps> = ({ app }) => {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [currentPage, numPages, scale, rotation]);
 
+  // Initial load
   useEffect(() => {
     let isCancelled = false;
     setIsLoading(true);
@@ -360,26 +392,28 @@ const PDFPreviewContent: React.FC<PDFPreviewContentProps> = ({ app }) => {
 
   return (
     <div className="relative flex flex-col h-full bg-[#1e1e1e]">
-      {/* Toolbar */}
-      <div className="h-10 bg-[#2d2d2d] border-b border-white/5 flex items-center justify-between px-4 shrink-0 shadow-lg select-none">
-        <div className="flex items-center gap-4">
-          <div className="flex items-center gap-1 bg-white/5 rounded-md p-1">
+      {/* macOS Preview Toolbar */}
+      <div className="h-10 bg-[#2b2b2b]/95 backdrop-blur-md border-b border-white/10 flex items-center justify-between px-3 sm:px-4 shrink-0 shadow-lg select-none gap-2 overflow-x-auto no-scrollbar">
+        {/* Left Toolbar Items: Sidebar + Navigation */}
+        <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+          <div className="flex items-center gap-1 bg-white/5 rounded-md p-0.5 sm:p-1">
             <button
               onClick={() => setIsSidebarOpen((prev) => !prev)}
               className={`p-1 rounded transition-colors ${
-                isSidebarOpen ? "bg-white/15 text-white" : "hover:bg-white/10 text-white/50"
+                isSidebarOpen ? "bg-white/20 text-white" : "hover:bg-white/10 text-white/60 hover:text-white"
               }`}
-              title="Toggle Panel Thumbnail"
+              title="Toggle Panel Thumbnail (Sidebar)"
             >
               <Sidebar size={14} />
             </button>
           </div>
-          <div className="flex items-center gap-1.5 text-[12px]">
+          
+          <div className="flex items-center gap-1 text-[12px]">
             <button
               onClick={() => scrollToPage(currentPage - 1)}
               className="p-1 hover:bg-white/10 rounded transition-colors text-white/60 hover:text-white disabled:opacity-30 disabled:hover:bg-transparent"
               disabled={currentPage <= 1}
-              title="Halaman Sebelumnya (←)"
+              title="Halaman Sebelumnya (← atau PageUp)"
             >
               <ChevronLeft size={14} />
             </button>
@@ -408,8 +442,8 @@ const PDFPreviewContent: React.FC<PDFPreviewContentProps> = ({ app }) => {
                   setPageInputVal(String(currentPage));
                   setIsEditingPage(true);
                 }}
-                className="bg-black/20 hover:bg-black/40 px-2 py-0.5 rounded text-white/70 hover:text-white font-mono transition-colors cursor-text"
-                title="Klik untuk lompat halaman"
+                className="bg-black/20 hover:bg-black/40 px-2 py-0.5 rounded text-white/70 hover:text-white font-mono transition-colors cursor-text text-xs"
+                title="Klik untuk langsung loncat ke nomor halaman"
               >
                 {currentPage} / {numPages}
               </button>
@@ -419,15 +453,16 @@ const PDFPreviewContent: React.FC<PDFPreviewContentProps> = ({ app }) => {
               onClick={() => scrollToPage(currentPage + 1)}
               className="p-1 hover:bg-white/10 rounded transition-colors text-white/60 hover:text-white disabled:opacity-30 disabled:hover:bg-transparent"
               disabled={currentPage >= numPages}
-              title="Halaman Selanjutnya (→)"
+              title="Halaman Selanjutnya (→ atau PageDown)"
             >
               <ChevronRight size={14} />
             </button>
           </div>
         </div>
 
-        <div className="flex items-center gap-3">
-          <div className="flex items-center gap-1 bg-white/5 rounded-md p-1">
+        {/* Right Toolbar Items: Zoom, Rotate, Download, Share */}
+        <div className="flex items-center gap-1.5 sm:gap-2.5 shrink-0">
+          <div className="flex items-center gap-0.5 sm:gap-1 bg-white/5 rounded-md p-0.5 sm:p-1">
             <button
               onClick={handleZoomOut}
               disabled={scale <= 0.5}
@@ -438,8 +473,8 @@ const PDFPreviewContent: React.FC<PDFPreviewContentProps> = ({ app }) => {
             </button>
             <button
               onClick={handleResetZoom}
-              className="text-[11px] font-mono text-white/60 hover:text-white px-1.5 py-0.5 rounded hover:bg-white/10 transition-colors"
-              title="Reset ke 100% (Tekan 0)"
+              className="text-[11px] font-mono text-white/70 hover:text-white px-1 sm:px-1.5 py-0.5 rounded hover:bg-white/10 transition-colors"
+              title="Klik untuk Fit Width / Reset 100% (Tekan 0)"
             >
               {Math.round(scale * 100)}%
             </button>
@@ -451,14 +486,23 @@ const PDFPreviewContent: React.FC<PDFPreviewContentProps> = ({ app }) => {
             >
               <ZoomIn size={14} />
             </button>
+            <button
+              onClick={handleFitWidth}
+              className="p-1 hover:bg-white/10 rounded text-white/60 hover:text-white transition-colors"
+              title="Sesuaikan Lebar Halaman (Fit Width)"
+            >
+              <Maximize2 size={13} />
+            </button>
           </div>
+
           <button
             onClick={handleRotate}
             className="p-1.5 hover:bg-white/10 rounded text-white/60 hover:text-white transition-colors"
-            title="Putar 90° Searah Jarum Jam (R)"
+            title="Putar 90° Searah Jarum Jam (Tekan R)"
           >
             <RotateCw size={14} />
           </button>
+
           {pdfPath && (
             <a
               href={pdfPath}
@@ -469,6 +513,7 @@ const PDFPreviewContent: React.FC<PDFPreviewContentProps> = ({ app }) => {
               <Download size={14} />
             </a>
           )}
+
           <button
             onClick={handleShare}
             className="p-1.5 hover:bg-white/10 rounded text-white/60 hover:text-white transition-colors"
@@ -483,9 +528,10 @@ const PDFPreviewContent: React.FC<PDFPreviewContentProps> = ({ app }) => {
       <div className="flex-1 flex overflow-hidden">
         {/* Sidebar Drawer */}
         {isSidebarOpen && pdfDoc && (
-          <aside className="w-40 bg-[#242424] border-r border-white/10 flex flex-col shrink-0 overflow-y-auto p-2 gap-2 select-none animate-in fade-in slide-in-from-left duration-150">
-            <div className="text-[10px] font-bold text-white/40 px-2 py-1 tracking-wider uppercase">
-              Thumbnail ({numPages})
+          <aside className="w-36 sm:w-44 bg-[#212121]/95 backdrop-blur-md border-r border-white/10 flex flex-col shrink-0 overflow-y-auto p-2 gap-2 select-none animate-in fade-in slide-in-from-left duration-150">
+            <div className="text-[10px] font-bold text-white/40 px-2 py-1 tracking-wider uppercase flex items-center justify-between">
+              <span>Thumbnail</span>
+              <span className="font-mono text-white/30">{numPages}</span>
             </div>
             <div className="flex flex-col gap-1.5">
               {Array.from({ length: numPages }, (_, i) => i + 1).map((pageNum) => (
@@ -493,8 +539,14 @@ const PDFPreviewContent: React.FC<PDFPreviewContentProps> = ({ app }) => {
                   key={pageNum}
                   pdfDoc={pdfDoc}
                   pageNum={pageNum}
+                  rotation={rotation}
                   isActive={currentPage === pageNum}
-                  onClick={() => scrollToPage(pageNum)}
+                  onClick={() => {
+                    scrollToPage(pageNum);
+                    if (window.innerWidth < 640) {
+                      setIsSidebarOpen(false);
+                    }
+                  }}
                 />
               ))}
             </div>
@@ -504,15 +556,15 @@ const PDFPreviewContent: React.FC<PDFPreviewContentProps> = ({ app }) => {
         {/* Document Pages Container */}
         <div
           ref={containerRef}
-          className="flex-1 overflow-auto bg-[#181818] p-6 flex flex-col items-center"
+          className="flex-1 overflow-auto bg-[#171717] p-4 sm:p-6 flex flex-col items-center"
         >
           {isLoading ? (
-            <div className="flex-1 flex flex-col items-center justify-center text-white/40 gap-3">
+            <div className="flex-1 flex flex-col items-center justify-center text-white/40 gap-3 py-16">
               <Loader2 size={32} className="animate-spin text-blue-400" />
               <p className="text-xs">Memuat dokumen PDF...</p>
             </div>
           ) : error ? (
-            <div className="flex-1 flex flex-col items-center justify-center text-white/40 gap-3">
+            <div className="flex-1 flex flex-col items-center justify-center text-white/40 gap-3 py-16">
               <Sidebar size={36} className="opacity-30" />
               <p className="text-sm text-red-400">{error}</p>
               <a
@@ -533,7 +585,10 @@ const PDFPreviewContent: React.FC<PDFPreviewContentProps> = ({ app }) => {
                   pageNum={pageNum}
                   scale={scale}
                   rotation={rotation}
-                  onVisible={(page) => setCurrentPage(page)}
+                  onVisible={(page) => {
+                    setCurrentPage(page);
+                    setPageInputVal(String(page));
+                  }}
                 />
               ))}
             </div>
@@ -543,7 +598,7 @@ const PDFPreviewContent: React.FC<PDFPreviewContentProps> = ({ app }) => {
 
       {/* macOS Toast Notification */}
       {toastMessage && (
-        <div className="absolute bottom-6 right-6 z-50 flex items-center gap-2 bg-[#2d2d2d]/95 backdrop-blur-md text-white text-xs px-4 py-2.5 rounded-full border border-white/10 shadow-2xl select-none animate-in fade-in slide-in-from-bottom-2">
+        <div className="absolute bottom-6 right-6 z-50 flex items-center gap-2 bg-[#2b2b2b]/95 backdrop-blur-md text-white text-xs px-4 py-2.5 rounded-full border border-white/10 shadow-2xl select-none animate-in fade-in slide-in-from-bottom-2">
           <Check size={14} className="text-green-400 shrink-0" />
           <span>{toastMessage}</span>
         </div>
