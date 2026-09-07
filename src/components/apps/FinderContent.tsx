@@ -20,6 +20,7 @@ interface FinderContentProps {
   trashItems?: any[];
   onEmptyTrash?: () => void;
   onPutBack?: (item: any) => void;
+  onPathChange?: (newPath: string) => void;
 }
 
 const FinderContent: React.FC<FinderContentProps> = ({ 
@@ -30,7 +31,8 @@ const FinderContent: React.FC<FinderContentProps> = ({
   isFocused,
   trashItems = [],
   onEmptyTrash,
-  onPutBack
+  onPutBack,
+  onPathChange
 }) => {
   const [currentPath, setCurrentPath] = useState(initialPath || "Recents");
   const [history, setHistory] = useState<string[]>([initialPath || "Recents"]);
@@ -114,14 +116,17 @@ const FinderContent: React.FC<FinderContentProps> = ({
     setHistoryIndex(newHistory.length - 1);
     setCurrentPath(path);
     setSelectedId(null);
+    onPathChange?.(path);
   };
 
   const goBack = () => {
     if (historyIndex > 0) {
       const targetHistory = historyIndex - 1;
       setHistoryIndex(targetHistory);
-      setCurrentPath(history[targetHistory]);
+      const newPath = history[targetHistory];
+      setCurrentPath(newPath);
       setSelectedId(null);
+      onPathChange?.(newPath);
     }
   };
 
@@ -129,8 +134,10 @@ const FinderContent: React.FC<FinderContentProps> = ({
     if (historyIndex < history.length - 1) {
       const targetHistory = historyIndex + 1;
       setHistoryIndex(targetHistory);
-      setCurrentPath(history[targetHistory]);
+      const newPath = history[targetHistory];
+      setCurrentPath(newPath);
       setSelectedId(null);
+      onPathChange?.(newPath);
     }
   };
 

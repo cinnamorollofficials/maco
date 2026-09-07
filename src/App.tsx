@@ -178,8 +178,8 @@ export default function App() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [windows, activeWindow, desktopItems]);
 
-  const renderAppContent = (window: WindowState) => {
-    const { appId, config } = window;
+  const renderAppContent = (appWin: WindowState) => {
+    const { appId, config } = appWin;
     
     switch (appId) {
       case 'terminal':
@@ -192,7 +192,7 @@ export default function App() {
       case 'music':
         return <MusicContent />;
       case 'preview':
-        return <PDFPreviewContent app={window} />;
+        return <PDFPreviewContent app={appWin} />;
       case 'image_preview':
         return <ImagePreviewContent />;
       case 'finder':
@@ -206,6 +206,14 @@ export default function App() {
             trashItems={trashItems}
             onEmptyTrash={() => setTrashItems([])}
             onPutBack={putBackItem}
+            onPathChange={(newPath) => {
+              setWindows(prev => prev.map(w => w.id === appWin.id ? { ...w, config: { ...w.config, initialPath: newPath } } : w));
+              const slug = newPath.toLowerCase().replace(/\s+/g, '-');
+              const targetUrl = `/finder/${slug}`;
+              if (window.location.pathname !== targetUrl) {
+                window.history.replaceState({ activeWindow: appWin.id }, '', targetUrl);
+              }
+            }}
           />
         );
       case 'trash':
