@@ -192,7 +192,14 @@ export default function App() {
       case 'music':
         return <MusicContent />;
       case 'preview':
-        return <PDFPreviewContent app={appWin} />;
+        return (
+          <PDFPreviewContent 
+            app={appWin} 
+            onStateChange={(state) => {
+              setWindows(prev => prev.map(w => w.id === appWin.id ? { ...w, config: { ...w.config, ...state } } : w));
+            }}
+          />
+        );
       case 'image_preview':
         return <ImagePreviewContent />;
       case 'finder':
