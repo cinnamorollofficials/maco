@@ -5,6 +5,7 @@ import { Folder, Trash2, FileText } from "lucide-react";
 // Types & Constants
 import { WindowState, DesktopItem, Note } from "./types";
 import { APPS, INITIAL_MOCK_FILES } from "./constants";
+import { getRouteForWindow, parseRoute } from "./utils/routes";
 
 // Core Components
 import BootScreen from "./components/BootScreen";
@@ -295,6 +296,50 @@ export default function App() {
       setLaunchingApps(prev => prev.filter(id => id !== appId));
     }, 800);
   };
+
+  const initialRouteExecuted = useRef(false);
+
+  // Synchronize browser URL with active window or accessible view
+  useEffect(() => {
+    if (!isBooted) return;
+    const targetUrl = getRouteForWindow(activeWindow, windows, isAccessibleViewOpen);
+    if (window.location.pathname !== targetUrl) {
+      window.history.pushState({ activeWindow, isAccessibleViewOpen }, '', targetUrl);
+    }
+  }, [activeWindow, windows, isAccessibleViewOpen, isBooted]);
+
+  // Execute deep link route once booted
+  useEffect(() => {
+    if (isBooted && !initialRouteExecuted.current) {
+      initialRouteExecuted.current = true;
+      const parsed = parseRoute(window.location.pathname);
+      if (parsed.type === 'resume') {
+        setIsAccessibleViewOpen(true);
+      } else if (parsed.type === 'app') {
+        openApp(parsed.appId, parsed.config);
+      }
+    }
+  }, [isBooted]);
+
+  // Handle browser Back / Forward buttons (popstate)
+  useEffect(() => {
+    const handlePopState = () => {
+      const parsed = parseRoute(window.location.pathname);
+      if (parsed.type === 'none') {
+        setIsAccessibleViewOpen(false);
+        setWindows(prev => prev.map(w => ({ ...w, isMinimized: true })));
+        setActiveWindow(null);
+      } else if (parsed.type === 'resume') {
+        setIsAccessibleViewOpen(true);
+      } else if (parsed.type === 'app') {
+        setIsAccessibleViewOpen(false);
+        openApp(parsed.appId, parsed.config);
+      }
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, [windows]);
 
   const isDroppedOnTrash = (point: { x: number; y: number }) => {
     // Check Dock Trash
