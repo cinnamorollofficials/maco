@@ -196,7 +196,19 @@ export default function App() {
           <PDFPreviewContent 
             app={appWin} 
             onStateChange={(state) => {
-              setWindows(prev => prev.map(w => w.id === appWin.id ? { ...w, config: { ...w.config, ...state } } : w));
+              setWindows(prev => {
+                const win = prev.find(w => w.id === appWin.id);
+                if (!win) return prev;
+                if (
+                  win.config?.page === state.page &&
+                  win.config?.zoom === state.zoom &&
+                  win.config?.rotation === state.rotation &&
+                  win.config?.sidebar === state.sidebar
+                ) {
+                  return prev;
+                }
+                return prev.map(w => w.id === appWin.id ? { ...w, config: { ...w.config, ...state } } : w);
+              });
             }}
           />
         );

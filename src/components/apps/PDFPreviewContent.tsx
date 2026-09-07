@@ -19,10 +19,9 @@ interface PageItemProps {
   pageNum: number;
   scale: number;
   rotation: number;
-  onVisible?: (pageNum: number) => void;
 }
 
-const PDFPageItem: React.FC<PageItemProps> = ({ pdfDoc, pageNum, scale, rotation, onVisible }) => {
+const PDFPageItem: React.FC<PageItemProps> = React.memo(({ pdfDoc, pageNum, scale, rotation }) => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
   const [isRendered, setIsRendered] = useState(false);
@@ -81,25 +80,6 @@ const PDFPageItem: React.FC<PageItemProps> = ({ pdfDoc, pageNum, scale, rotation
     };
   }, [pdfDoc, pageNum, scale, rotation]);
 
-  useEffect(() => {
-    const el = containerRef.current;
-    if (!el || !onVisible) return;
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting && entry.intersectionRatio >= 0.5) {
-            onVisible(pageNum);
-          }
-        });
-      },
-      { threshold: 0.5 }
-    );
-
-    observer.observe(el);
-    return () => observer.disconnect();
-  }, [pageNum, onVisible]);
-
   return (
     <div
       ref={containerRef}
@@ -119,7 +99,7 @@ const PDFPageItem: React.FC<PageItemProps> = ({ pdfDoc, pageNum, scale, rotation
       </div>
     </div>
   );
-};
+});
 
 interface ThumbnailItemProps {
   pdfDoc: any;
@@ -129,7 +109,7 @@ interface ThumbnailItemProps {
   onClick: () => void;
 }
 
-const PDFThumbnailItem: React.FC<ThumbnailItemProps> = ({
+const PDFThumbnailItem: React.FC<ThumbnailItemProps> = React.memo(({
   pdfDoc,
   pageNum,
   rotation,
@@ -218,7 +198,7 @@ const PDFThumbnailItem: React.FC<ThumbnailItemProps> = ({
       <span className="text-[11px] font-medium mt-1.5 font-mono">{pageNum}</span>
     </button>
   );
-};
+});
 
 const PDF_STORAGE_KEY = "tahoe-pdf-preview";
 
@@ -304,15 +284,70 @@ const PDFPreviewContent: React.FC<PDFPreviewContentProps> = ({ app, onStateChang
     };
   }, []);
 
-  const scrollToPage = (pageNum: number) => {
+  const isProgrammaticScroll = useRef(false);
+  const scrollRafId = useRef<number | null>(null);
+
+  const scrollToPage = useCallback((pageNum: number, instant: boolean = false) => {
     const target = Math.max(1, Math.min(numPages, pageNum));
     const el = document.getElementById(`pdf-page-${target}`);
     if (el) {
-      el.scrollIntoView({ behavior: "smooth", block: "start" });
-      setCurrentPage(target);
-      setPageInputVal(String(target));
+      isProgrammaticScroll.current = true;
+      el.scrollIntoView({ behavior: instant ? "auto" : "smooth", block: "start" });
+      setCurrentPage((prev) => {
+        if (prev !== target) {
+          setPageInputVal(String(target));
+          return target;
+        }
+        return prev;
+      });
+      setTimeout(() => {
+        isProgrammaticScroll.current = false;
+      }, instant ? 100 : 500);
     }
-  };
+  }, [numPages]);
+
+  const handleScroll = useCallback(() => {
+    if (isProgrammaticScroll.current || !containerRef.current) return;
+    if (scrollRafId.current !== null) return;
+
+    scrollRafId.current = requestAnimationFrame(() => {
+      scrollRafId.current = null;
+      const container = containerRef.current;
+      if (!container) return;
+
+      const containerRect = container.getBoundingClientRect();
+      const focusPoint = containerRect.top + containerRect.height / 3;
+
+      let closestPage = 1;
+      for (let i = 1; i <= numPages; i++) {
+        const el = document.getElementById(`pdf-page-${i}`);
+        if (el) {
+          const rect = el.getBoundingClientRect();
+          if (rect.top <= focusPoint) {
+            closestPage = i;
+          } else {
+            break;
+          }
+        }
+      }
+
+      setCurrentPage((prev) => {
+        if (prev !== closestPage) {
+          setPageInputVal(String(closestPage));
+          return closestPage;
+        }
+        return prev;
+      });
+    });
+  }, [numPages]);
+
+  useEffect(() => {
+    return () => {
+      if (scrollRafId.current !== null) {
+        cancelAnimationFrame(scrollRafId.current);
+      }
+    };
+  }, []);
 
   const handlePageInputSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -380,7 +415,7 @@ const PDFPreviewContent: React.FC<PDFPreviewContentProps> = ({ app, onStateChang
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [currentPage, numPages, scale, rotation]);
+  }, [currentPage, numPages, scale, rotation, scrollToPage]);
 
   // Initial load
   useEffect(() => {
@@ -424,64 +459,44 @@ const PDFPreviewContent: React.FC<PDFPreviewContentProps> = ({ app, onStateChang
     if (pdfDoc && !initialScrollDone.current) {
       initialScrollDone.current = true;
       if (initialPage > 1) {
-        setTimeout(() => {
-          scrollToPage(initialPage);
-        }, 150);
+        const timer = setTimeout(() => {
+          scrollToPage(initialPage, true);
+        }, 50);
+        return () => clearTimeout(timer);
       }
     }
-  }, [pdfDoc, initialPage]);
-
-  // Respond to prop updates (e.g. browser back/forward navigation)
-  useEffect(() => {
-    if (app?.config?.page && app.config.page !== currentPage) {
-      scrollToPage(app.config.page);
-    }
-  }, [app?.config?.page]);
-
-  useEffect(() => {
-    if (app?.config?.zoom) {
-      const targetScale = app.config.zoom / 100;
-      if (Math.abs(targetScale - scale) > 0.01) {
-        setScale(targetScale);
-      }
-    }
-  }, [app?.config?.zoom]);
-
-  useEffect(() => {
-    if (app?.config?.rotation !== undefined && app.config.rotation !== rotation) {
-      setRotation(app.config.rotation);
-    }
-  }, [app?.config?.rotation]);
-
-  useEffect(() => {
-    if (app?.config?.sidebar !== undefined && app.config.sidebar !== isSidebarOpen) {
-      setIsSidebarOpen(app.config.sidebar);
-    }
-  }, [app?.config?.sidebar]);
+  }, [pdfDoc, initialPage, scrollToPage]);
 
   // Synchronize state changes to localStorage and parent
   const isInitialMount = useRef(true);
-  useEffect(() => {
-    if (isInitialMount.current) {
-      isInitialMount.current = false;
-      return;
-    }
+  const lastEmittedState = useRef<string>("");
 
+  useEffect(() => {
     const stateObj = {
       page: currentPage,
       zoom: Math.round(scale * 100),
       rotation,
       sidebar: isSidebarOpen,
     };
+    const stateStr = JSON.stringify(stateObj);
+
+    if (isInitialMount.current) {
+      isInitialMount.current = false;
+      lastEmittedState.current = stateStr;
+      return;
+    }
+
+    if (stateStr === lastEmittedState.current) return;
+    lastEmittedState.current = stateStr;
 
     try {
-      localStorage.setItem(PDF_STORAGE_KEY, JSON.stringify(stateObj));
+      localStorage.setItem(PDF_STORAGE_KEY, stateStr);
     } catch {
       // Ignore quota errors
     }
 
     onStateChange?.(stateObj);
-  }, [currentPage, scale, rotation, isSidebarOpen]);
+  }, [currentPage, scale, rotation, isSidebarOpen, onStateChange]);
 
   return (
     <div className="relative flex flex-col h-full bg-[#1e1e1e]">
@@ -649,6 +664,7 @@ const PDFPreviewContent: React.FC<PDFPreviewContentProps> = ({ app, onStateChang
         {/* Document Pages Container */}
         <div
           ref={containerRef}
+          onScroll={handleScroll}
           className="flex-1 overflow-auto bg-[#171717] p-4 sm:p-6 flex flex-col items-center"
         >
           {isLoading ? (
@@ -678,10 +694,6 @@ const PDFPreviewContent: React.FC<PDFPreviewContentProps> = ({ app, onStateChang
                   pageNum={pageNum}
                   scale={scale}
                   rotation={rotation}
-                  onVisible={(page) => {
-                    setCurrentPage(page);
-                    setPageInputVal(String(page));
-                  }}
                 />
               ))}
             </div>
