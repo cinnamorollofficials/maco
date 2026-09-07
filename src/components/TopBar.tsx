@@ -22,6 +22,7 @@ interface TopBarProps {
   onRestart?: () => void;
   onOpenApp?: (appId: string) => void;
   onOpenAccessibleView?: () => void;
+  isHidden?: boolean;
 }
 
 const TopBar: React.FC<TopBarProps> = ({ 
@@ -29,13 +30,15 @@ const TopBar: React.FC<TopBarProps> = ({
   onOpenSpotlight,
   onRestart,
   onOpenApp,
-  onOpenAccessibleView
+  onOpenAccessibleView,
+  isHidden = false
 }) => {
   const [time, setTime] = useState(new Date());
   const [isAppleMenuOpen, setIsAppleMenuOpen] = useState(false);
   const [isControlCenterOpen, setIsControlCenterOpen] = useState(false);
   const [showAboutModal, setShowAboutModal] = useState(false);
   const [activeMenu, setActiveMenu] = useState<string | null>(null);
+  const [isHovered, setIsHovered] = useState(false);
 
   const [wifiEnabled, setWifiEnabled] = useState(true);
   const [bluetoothEnabled, setBluetoothEnabled] = useState(true);
@@ -44,6 +47,7 @@ const TopBar: React.FC<TopBarProps> = ({
   const [volume, setVolume] = useState(70);
 
   const topBarRef = useRef<HTMLDivElement>(null);
+  const isActuallyHidden = isHidden && !isHovered;
 
   useEffect(() => {
     const timer = setInterval(() => setTime(new Date()), 1000);
@@ -65,9 +69,21 @@ const TopBar: React.FC<TopBarProps> = ({
 
   return (
     <>
+      {/* Top Edge Hover Trigger when TopBar is hidden in fullscreen */}
+      {isHidden && (
+        <div
+          className="fixed top-0 left-0 right-0 h-1.5 z-[3001]"
+          onMouseEnter={() => setIsHovered(true)}
+        />
+      )}
+
       <div 
         ref={topBarRef}
-        className="fixed top-0 left-0 right-0 h-[24px] bg-black/40 backdrop-blur-[30px] border-b border-white/10 flex items-center justify-between px-3 z-[1000] text-[13px] text-white font-medium select-none"
+        onMouseEnter={() => setIsHovered(true)}
+        onMouseLeave={() => setIsHovered(false)}
+        className={`fixed top-0 left-0 right-0 h-[24px] bg-black/60 backdrop-blur-[30px] border-b border-white/10 flex items-center justify-between px-3 z-[3000] text-[13px] text-white font-medium select-none transition-transform duration-300 ease-in-out ${
+          isActuallyHidden ? "-translate-y-full pointer-events-none" : "translate-y-0"
+        }`}
         onClick={(e) => e.stopPropagation()}
         onMouseDown={(e) => e.stopPropagation()}
       >

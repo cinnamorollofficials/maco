@@ -6,6 +6,7 @@ interface WindowProps {
   app: WindowState;
   onClose: () => void;
   onMinimize: () => void;
+  onToggleMaximize?: () => void;
   zIndex: number;
   onFocus: () => void;
   dragConstraints?: React.RefObject<HTMLDivElement | null>;
@@ -16,11 +17,13 @@ const Window: React.FC<WindowProps> = ({
   app,
   onClose,
   onMinimize,
+  onToggleMaximize,
   zIndex,
   onFocus,
   children
 }) => {
-  const [isMaximized, setIsMaximized] = useState(false);
+  const [localMaximized, setLocalMaximized] = useState(false);
+  const isMaximized = app.isMaximized !== undefined ? app.isMaximized : localMaximized;
   const [isMobile, setIsMobile] = useState(false);
   const [position, setPosition] = useState(app.initialPosition || { x: 100, y: 80 });
   const [size, setSize] = useState({ w: 680, h: 440 });
@@ -51,7 +54,11 @@ const Window: React.FC<WindowProps> = ({
   }, []);
 
   const handleMaximize = () => {
-    setIsMaximized(prev => !prev);
+    if (onToggleMaximize) {
+      onToggleMaximize();
+    } else {
+      setLocalMaximized(prev => !prev);
+    }
     onFocus();
   };
 
@@ -132,18 +139,15 @@ const Window: React.FC<WindowProps> = ({
     }
   }, []);
 
-  // TopBar height is 24px — offset maximized window so its header is never hidden
-  const TOP_BAR_HEIGHT = 24;
-
   const windowStyle: React.CSSProperties = effectiveMaximized
     ? {
       position: 'fixed',
-      top: TOP_BAR_HEIGHT,
+      top: 0,
       left: 0,
       right: 0,
       bottom: 0,
       width: '100vw',
-      height: `calc(100vh - ${TOP_BAR_HEIGHT}px)`,
+      height: '100vh',
       borderRadius: 0,
       zIndex,
       boxSizing: 'border-box'
@@ -173,7 +177,8 @@ const Window: React.FC<WindowProps> = ({
       }}
     >
       <div
-        className={`h-[38px] flex items-center justify-between px-4 grow-0 shrink-0 bg-white/5 border-b border-white/5 ${!isMaximized ? 'cursor-grab active:cursor-grabbing' : ''}`}
+        className={`h-[38px] flex items-center justify-between px-4 grow-0 shrink-0 bg-white/5 border-b border-white/5 ${!effectiveMaximized ? 'cursor-grab active:cursor-grabbing' : ''}`}
+        onDoubleClick={handleMaximize}
         onPointerDown={handleTitlePointerDown}
         onPointerMove={handleTitlePointerMove}
         onPointerUp={handleTitlePointerUp}

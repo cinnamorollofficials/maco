@@ -7,6 +7,7 @@ export interface WindowState {
   icon: React.ReactNode;
   isOpen: boolean;
   isMinimized: boolean;
+  isMaximized?: boolean;
   zIndex: number;
   config?: any;
   initialPosition?: { x: number; y: number };

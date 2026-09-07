@@ -430,6 +430,21 @@ export default function App() {
     setActiveWindow(id);
   };
 
+  const toggleMaximizeApp = (id: string, isMaximized?: boolean) => {
+    setWindows(prev => prev.map(w => {
+      if (w.id === id) {
+        const next = isMaximized !== undefined ? isMaximized : !w.isMaximized;
+        return { ...w, isMaximized: next };
+      }
+      return w;
+    }));
+  };
+
+  const [isDockHovered, setIsDockHovered] = useState(false);
+  const activeWin = windows.find(w => w.id === activeWindow && !w.isMinimized);
+  const isTopBarHidden = !!activeWin?.isMaximized;
+  const isDockHidden = isTopBarHidden && !isDockHovered;
+
   const handleSelectionStart = (e: React.MouseEvent) => {
     // Only allow left click (button 0) for selection marquee to avoid right-click interference
     if (e.button !== 0) return;
@@ -597,6 +612,7 @@ export default function App() {
         onRestart={() => setIsBooted(false)}
         onOpenApp={openApp}
         onOpenAccessibleView={() => setIsAccessibleViewOpen(true)}
+        isHidden={isTopBarHidden}
       />
 
       {/* Widgets Layer - Hidden on Mobile */}
@@ -654,6 +670,7 @@ export default function App() {
               app={window} 
               onClose={() => closeApp(window.id)}
               onMinimize={() => minimizeApp(window.id)}
+              onToggleMaximize={() => toggleMaximizeApp(window.id)}
               zIndex={window.zIndex}
               onFocus={() => focusApp(window.id)}
               dragConstraints={desktopRef}
@@ -735,8 +752,18 @@ export default function App() {
       )}
 
       {/* Dock Area */}
+      {isTopBarHidden && (
+        <div 
+          className="fixed bottom-0 left-0 right-0 h-2.5 z-[2001]"
+          onMouseEnter={() => setIsDockHovered(true)}
+        />
+      )}
       <div 
-        className="fixed bottom-[32px] lg:bottom-[12px] left-1/2 -translate-x-1/2 z-[2000] w-fit max-w-[95vw]"
+        onMouseEnter={() => setIsDockHovered(true)}
+        onMouseLeave={() => setIsDockHovered(false)}
+        className={`fixed bottom-[32px] lg:bottom-[12px] left-1/2 -translate-x-1/2 z-[2000] w-fit max-w-[95vw] transition-transform duration-300 ease-in-out ${
+          isDockHidden ? "translate-y-[160%] pointer-events-none" : "translate-y-0"
+        }`}
         onClick={(e) => e.stopPropagation()}
         onMouseDown={(e) => e.stopPropagation()}
       >
