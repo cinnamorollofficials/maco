@@ -50,11 +50,30 @@ export function getRouteForWindow(
   }
 
   if (appId === "preview") {
-    if (config?.pdfPath?.includes("Portofolio")) {
-      return `/preview/portfolio${maxParam}`;
+    const basePath = config?.pdfPath?.includes("Portofolio")
+      ? "/preview/portfolio"
+      : `/preview/${encodeURIComponent((config?.title || "doc").toLowerCase().replace(/\s+/g, '-'))}`;
+
+    const params = new URLSearchParams();
+    if (config?.page && config.page > 1) {
+      params.set("page", String(config.page));
     }
-    const titleSlug = encodeURIComponent((config?.title || "doc").toLowerCase().replace(/\s+/g, '-'));
-    return `/preview/${titleSlug}${maxParam}`;
+    if (config?.zoom && config.zoom !== 100) {
+      params.set("zoom", String(config.zoom));
+    }
+    if (config?.rotation && config.rotation !== 0) {
+      params.set("rotation", String(config.rotation));
+    }
+    // Sidebar default is true. Only serialize when user closes it (sidebar=false)
+    if (config?.sidebar === false) {
+      params.set("sidebar", "false");
+    }
+    if (isMaximized) {
+      params.set("maximized", "true");
+    }
+
+    const queryString = params.toString();
+    return queryString ? `${basePath}?${queryString}` : basePath;
   }
 
   if (appId === "wallpaper_settings") {
@@ -65,7 +84,7 @@ export function getRouteForWindow(
 }
 
 /**
- * Parses a browser pathname and search params into an app/folder command with maximize state
+ * Parses a browser pathname and search params into an app/folder command with toolbar state
  */
 export function parseRoute(pathname: string, search?: string): ParsedRoute {
   let searchStr = search || "";
@@ -81,6 +100,17 @@ export function parseRoute(pathname: string, search?: string): ParsedRoute {
 
   const searchParams = new URLSearchParams(searchStr);
   const isMaximized = searchParams.get("maximized") === "true" || searchParams.get("max") === "1" || searchParams.get("fullscreen") === "true";
+
+  const pageParam = searchParams.get("page");
+  const zoomParam = searchParams.get("zoom");
+  const rotationParam = searchParams.get("rotation");
+  const sidebarParam = searchParams.get("sidebar");
+
+  const parsedPage = pageParam ? parseInt(pageParam, 10) : undefined;
+  const parsedZoom = zoomParam ? parseInt(zoomParam, 10) : undefined;
+  const parsedRotation = rotationParam ? parseInt(rotationParam, 10) : undefined;
+  // Default is true, only false if explicitly "false" or "0"
+  const parsedSidebar = sidebarParam !== null ? (sidebarParam !== "false" && sidebarParam !== "0") : undefined;
 
   if (!cleanPath || cleanPath === "") {
     return { type: 'none' };
@@ -98,7 +128,14 @@ export function parseRoute(pathname: string, search?: string): ParsedRoute {
     return { 
       type: 'app', 
       appId: 'preview', 
-      config: { title: 'Portofolio Hadi 2026.pdf', pdfPath: '/Portofolio Hadi 2026.pdf' },
+      config: { 
+        title: 'Portofolio Hadi 2026.pdf', 
+        pdfPath: '/Portofolio Hadi 2026.pdf',
+        page: parsedPage,
+        zoom: parsedZoom,
+        rotation: parsedRotation,
+        sidebar: parsedSidebar
+      },
       isMaximized
     };
   }
