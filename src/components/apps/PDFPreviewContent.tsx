@@ -11,6 +11,7 @@ pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
 
 interface PDFPreviewContentProps {
   app?: WindowState;
+  onStateChange?: (state: { page: number; zoom: number; rotation: number; sidebar: boolean }) => void;
 }
 
 interface PageItemProps {
@@ -219,19 +220,48 @@ const PDFThumbnailItem: React.FC<ThumbnailItemProps> = ({
   );
 };
 
-const PDFPreviewContent: React.FC<PDFPreviewContentProps> = ({ app }) => {
+const PDF_STORAGE_KEY = "tahoe-pdf-preview";
+
+const getSavedPreviewState = () => {
+  if (typeof window === "undefined") return null;
+  try {
+    const saved = localStorage.getItem(PDF_STORAGE_KEY);
+    return saved ? JSON.parse(saved) : null;
+  } catch {
+    return null;
+  }
+};
+
+const PDFPreviewContent: React.FC<PDFPreviewContentProps> = ({ app, onStateChange }) => {
   const pdfPath = app?.config?.pdfPath || "/Portofolio Hadi 2026.pdf";
+  const savedState = useRef(getSavedPreviewState()).current;
+
+  const initialPage = app?.config?.page ?? savedState?.page ?? 1;
+  const initialZoom = app?.config?.zoom
+    ? app.config.zoom / 100
+    : savedState?.zoom
+    ? savedState.zoom / 100
+    : 1.0;
+  const initialRotation = app?.config?.rotation ?? savedState?.rotation ?? 0;
+  // Default sidebar is true (open)
+  const initialSidebar =
+    app?.config?.sidebar !== undefined
+      ? app.config.sidebar
+      : savedState?.sidebar !== undefined
+      ? savedState.sidebar
+      : true;
+
   const [pdfDoc, setPdfDoc] = useState<any>(null);
   const [numPages, setNumPages] = useState<number>(1);
-  const [currentPage, setCurrentPage] = useState<number>(1);
-  const [scale, setScale] = useState<number>(1.0);
-  const [rotation, setRotation] = useState<number>(0);
-  const [isSidebarOpen, setIsSidebarOpen] = useState<boolean>(false);
+  const [currentPage, setCurrentPage] = useState<number>(initialPage);
+  const [scale, setScale] = useState<number>(initialZoom);
+  const [rotation, setRotation] = useState<number>(initialRotation);
+  const [isSidebarOpen, setIsSidebarOpen] = useState<boolean>(initialSidebar);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
   const [isEditingPage, setIsEditingPage] = useState<boolean>(false);
-  const [pageInputVal, setPageInputVal] = useState<string>("1");
+  const [pageInputVal, setPageInputVal] = useState<string>(String(initialPage));
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const toastTimerRef = useRef<any>(null);
 
@@ -370,8 +400,6 @@ const PDFPreviewContent: React.FC<PDFPreviewContentProps> = ({ app }) => {
         if (!isCancelled) {
           setPdfDoc(doc);
           setNumPages(doc.numPages);
-          setCurrentPage(1);
-          setPageInputVal("1");
           setIsLoading(false);
         }
       } catch (err: any) {
@@ -389,6 +417,43 @@ const PDFPreviewContent: React.FC<PDFPreviewContentProps> = ({ app }) => {
       isCancelled = true;
     };
   }, [pdfPath]);
+
+  // Auto-scroll to initial page once PDF is loaded
+  const initialScrollDone = useRef(false);
+  useEffect(() => {
+    if (pdfDoc && !initialScrollDone.current) {
+      initialScrollDone.current = true;
+      if (initialPage > 1) {
+        setTimeout(() => {
+          scrollToPage(initialPage);
+        }, 150);
+      }
+    }
+  }, [pdfDoc, initialPage]);
+
+  // Synchronize state changes to localStorage and parent
+  const isInitialMount = useRef(true);
+  useEffect(() => {
+    if (isInitialMount.current) {
+      isInitialMount.current = false;
+      return;
+    }
+
+    const stateObj = {
+      page: currentPage,
+      zoom: Math.round(scale * 100),
+      rotation,
+      sidebar: isSidebarOpen,
+    };
+
+    try {
+      localStorage.setItem(PDF_STORAGE_KEY, JSON.stringify(stateObj));
+    } catch {
+      // Ignore quota errors
+    }
+
+    onStateChange?.(stateObj);
+  }, [currentPage, scale, rotation, isSidebarOpen]);
 
   return (
     <div className="relative flex flex-col h-full bg-[#1e1e1e]">
