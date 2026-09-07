@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { Sidebar, ChevronLeft, ChevronRight, ZoomOut, ZoomIn, RotateCw, Share, Download, Loader2 } from "lucide-react";
+import { Sidebar, ChevronLeft, ChevronRight, ZoomOut, ZoomIn, RotateCw, Share, Download, Loader2, Check } from "lucide-react";
 import { WindowState } from "../../types";
 import * as pdfjsLib from "pdfjs-dist";
 
@@ -221,8 +221,47 @@ const PDFPreviewContent: React.FC<PDFPreviewContentProps> = ({ app }) => {
 
   const [isEditingPage, setIsEditingPage] = useState<boolean>(false);
   const [pageInputVal, setPageInputVal] = useState<string>("1");
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const toastTimerRef = useRef<any>(null);
 
   const containerRef = useRef<HTMLDivElement | null>(null);
+
+  const showToast = (msg: string) => {
+    if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
+    setToastMessage(msg);
+    toastTimerRef.current = setTimeout(() => {
+      setToastMessage(null);
+    }, 3000);
+  };
+
+  const handleShare = async () => {
+    const shareUrl = window.location.origin + "/preview/portfolio";
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: "Portofolio Hadi Gunawan 2026",
+          text: "Lihat portofolio interaktif Hadi Gunawan — Senior Frontend & Fullstack Engineer",
+          url: shareUrl,
+        });
+        return;
+      } catch (err: any) {
+        if (err?.name === "AbortError") return;
+      }
+    }
+
+    try {
+      await navigator.clipboard.writeText(shareUrl);
+      showToast("Tautan portofolio disalin ke papan klip!");
+    } catch {
+      showToast("Gagal menyalin tautan.");
+    }
+  };
+
+  useEffect(() => {
+    return () => {
+      if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
+    };
+  }, []);
 
   const scrollToPage = (pageNum: number) => {
     const target = Math.max(1, Math.min(numPages, pageNum));
@@ -320,7 +359,7 @@ const PDFPreviewContent: React.FC<PDFPreviewContentProps> = ({ app }) => {
   }, [pdfPath]);
 
   return (
-    <div className="flex flex-col h-full bg-[#1e1e1e]">
+    <div className="relative flex flex-col h-full bg-[#1e1e1e]">
       {/* Toolbar */}
       <div className="h-10 bg-[#2d2d2d] border-b border-white/5 flex items-center justify-between px-4 shrink-0 shadow-lg select-none">
         <div className="flex items-center gap-4">
@@ -423,14 +462,18 @@ const PDFPreviewContent: React.FC<PDFPreviewContentProps> = ({ app }) => {
           {pdfPath && (
             <a
               href={pdfPath}
-              download
+              download="Portofolio Hadi 2026.pdf"
               className="p-1.5 hover:bg-white/10 rounded text-white/60 hover:text-white transition-colors flex items-center"
-              title="Unduh PDF"
+              title="Unduh PDF (Portofolio Hadi 2026.pdf)"
             >
               <Download size={14} />
             </a>
           )}
-          <button className="p-1.5 hover:bg-white/10 rounded text-white/50 hover:text-white transition-colors" title="Bagikan">
+          <button
+            onClick={handleShare}
+            className="p-1.5 hover:bg-white/10 rounded text-white/60 hover:text-white transition-colors"
+            title="Bagikan Tautan Portofolio"
+          >
             <Share size={14} />
           </button>
         </div>
@@ -497,6 +540,14 @@ const PDFPreviewContent: React.FC<PDFPreviewContentProps> = ({ app }) => {
           )}
         </div>
       </div>
+
+      {/* macOS Toast Notification */}
+      {toastMessage && (
+        <div className="absolute bottom-6 right-6 z-50 flex items-center gap-2 bg-[#2d2d2d]/95 backdrop-blur-md text-white text-xs px-4 py-2.5 rounded-full border border-white/10 shadow-2xl select-none animate-in fade-in slide-in-from-bottom-2">
+          <Check size={14} className="text-green-400 shrink-0" />
+          <span>{toastMessage}</span>
+        </div>
+      )}
     </div>
   );
 };
