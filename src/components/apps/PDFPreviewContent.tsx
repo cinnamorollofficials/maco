@@ -246,7 +246,7 @@ const PDFPreviewContent: React.FC<PDFPreviewContentProps> = ({ app }) => {
   };
 
   const handleShare = async () => {
-    const shareUrl = window.location.origin + "/preview/portfolio";
+    const shareUrl = typeof window !== "undefined" ? window.location.href : "/preview/portfolio";
     if (navigator.share) {
       try {
         await navigator.share({

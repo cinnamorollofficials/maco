@@ -209,8 +209,10 @@ export default function App() {
             onPathChange={(newPath) => {
               setWindows(prev => prev.map(w => w.id === appWin.id ? { ...w, config: { ...w.config, initialPath: newPath } } : w));
               const slug = newPath.toLowerCase().replace(/\s+/g, '-');
-              const targetUrl = `/finder/${slug}`;
-              if (window.location.pathname !== targetUrl) {
+              const maxParam = appWin.isMaximized ? '?maximized=true' : '';
+              const targetUrl = `/finder/${slug}${maxParam}`;
+              const currentUrl = window.location.pathname + window.location.search;
+              if (currentUrl !== targetUrl) {
                 window.history.replaceState({ activeWindow: appWin.id }, '', targetUrl);
               }
             }}
@@ -232,7 +234,7 @@ export default function App() {
     }
   };
 
-  const openApp = (appId: string, config?: any) => {
+  const openApp = (appId: string, config?: any, isMaximized?: boolean) => {
     if (appId === 'launchpad') {
       setIsLaunchpadOpen(prev => !prev);
       return;
@@ -258,6 +260,7 @@ export default function App() {
         next.push({ 
           ...existingWindow, 
           isMinimized: false, 
+          isMaximized: isMaximized !== undefined ? isMaximized : existingWindow.isMaximized,
           zIndex: maxZ + 1,
           config: config || existingWindow.config 
         });
@@ -294,6 +297,7 @@ export default function App() {
           icon: appInfo.icon, 
           isOpen: true, 
           isMinimized: false, 
+          isMaximized: isMaximized ?? false,
           zIndex: maxZ + 1,
           config,
           initialPosition 
@@ -311,8 +315,14 @@ export default function App() {
   useEffect(() => {
     if (!isBooted) return;
     const targetUrl = getRouteForWindow(activeWindow, windows, isAccessibleViewOpen);
-    if (window.location.pathname !== targetUrl) {
-      window.history.pushState({ activeWindow, isAccessibleViewOpen }, '', targetUrl);
+    const currentUrl = window.location.pathname + window.location.search;
+    if (currentUrl !== targetUrl) {
+      const isOnlyParamChange = window.location.pathname === targetUrl.split('?')[0];
+      if (isOnlyParamChange) {
+        window.history.replaceState({ activeWindow, isAccessibleViewOpen }, '', targetUrl);
+      } else {
+        window.history.pushState({ activeWindow, isAccessibleViewOpen }, '', targetUrl);
+      }
     }
   }, [activeWindow, windows, isAccessibleViewOpen, isBooted]);
 
@@ -320,11 +330,11 @@ export default function App() {
   useEffect(() => {
     if (isBooted && !initialRouteExecuted.current) {
       initialRouteExecuted.current = true;
-      const parsed = parseRoute(window.location.pathname);
+      const parsed = parseRoute(window.location.pathname, window.location.search);
       if (parsed.type === 'resume') {
         setIsAccessibleViewOpen(true);
       } else if (parsed.type === 'app') {
-        openApp(parsed.appId, parsed.config);
+        openApp(parsed.appId, parsed.config, parsed.isMaximized);
       }
     }
   }, [isBooted]);
@@ -332,7 +342,7 @@ export default function App() {
   // Handle browser Back / Forward buttons (popstate)
   useEffect(() => {
     const handlePopState = () => {
-      const parsed = parseRoute(window.location.pathname);
+      const parsed = parseRoute(window.location.pathname, window.location.search);
       if (parsed.type === 'none') {
         setIsAccessibleViewOpen(false);
         setWindows(prev => prev.map(w => ({ ...w, isMinimized: true })));
@@ -341,7 +351,7 @@ export default function App() {
         setIsAccessibleViewOpen(true);
       } else if (parsed.type === 'app') {
         setIsAccessibleViewOpen(false);
-        openApp(parsed.appId, parsed.config);
+        openApp(parsed.appId, parsed.config, parsed.isMaximized);
       }
     };
 

@@ -3,7 +3,7 @@ import { WindowState } from "../types";
 export type ParsedRoute = 
   | { type: 'none' }
   | { type: 'resume' }
-  | { type: 'app'; appId: string; config?: any };
+  | { type: 'app'; appId: string; config?: any; isMaximized?: boolean };
 
 const FOLDER_MAP: Record<string, string> = {
   project: "Project",
@@ -18,7 +18,7 @@ const FOLDER_MAP: Record<string, string> = {
 };
 
 /**
- * Returns the URL pathname corresponding to the currently active window or view
+ * Returns the URL pathname and query parameter corresponding to the currently active window or view
  */
 export function getRouteForWindow(
   activeWindowId: string | null,
@@ -38,36 +38,49 @@ export function getRouteForWindow(
     return "/";
   }
 
-  const { appId, config } = activeWin;
+  const { appId, config, isMaximized } = activeWin;
+  const maxParam = isMaximized ? "?maximized=true" : "";
 
   if (appId === "finder") {
     const folder = config?.initialPath || "Recents";
     const slug = Object.keys(FOLDER_MAP).find(
       key => FOLDER_MAP[key].toLowerCase() === folder.toLowerCase()
     ) || encodeURIComponent(folder.toLowerCase().replace(/\s+/g, '-'));
-    return `/finder/${slug}`;
+    return `/finder/${slug}${maxParam}`;
   }
 
   if (appId === "preview") {
     if (config?.pdfPath?.includes("Portofolio")) {
-      return "/preview/portfolio";
+      return `/preview/portfolio${maxParam}`;
     }
     const titleSlug = encodeURIComponent((config?.title || "doc").toLowerCase().replace(/\s+/g, '-'));
-    return `/preview/${titleSlug}`;
+    return `/preview/${titleSlug}${maxParam}`;
   }
 
   if (appId === "wallpaper_settings") {
-    return "/settings/wallpaper";
+    return `/settings/wallpaper${maxParam}`;
   }
 
-  return `/app/${appId}`;
+  return `/app/${appId}${maxParam}`;
 }
 
 /**
- * Parses a browser pathname into an app/folder command
+ * Parses a browser pathname and search params into an app/folder command with maximize state
  */
-export function parseRoute(pathname: string): ParsedRoute {
-  const cleanPath = pathname.replace(/\/+$/, "").toLowerCase();
+export function parseRoute(pathname: string, search?: string): ParsedRoute {
+  let searchStr = search || "";
+  let cleanPath = pathname;
+
+  if (pathname.includes("?")) {
+    const parts = pathname.split("?");
+    cleanPath = parts[0];
+    if (!searchStr) searchStr = parts[1];
+  }
+
+  cleanPath = cleanPath.replace(/\/+$/, "").toLowerCase();
+
+  const searchParams = new URLSearchParams(searchStr);
+  const isMaximized = searchParams.get("maximized") === "true" || searchParams.get("max") === "1" || searchParams.get("fullscreen") === "true";
 
   if (!cleanPath || cleanPath === "") {
     return { type: 'none' };
@@ -78,14 +91,15 @@ export function parseRoute(pathname: string): ParsedRoute {
   }
 
   if (cleanPath === "/settings/wallpaper") {
-    return { type: 'app', appId: 'wallpaper_settings' };
+    return { type: 'app', appId: 'wallpaper_settings', isMaximized };
   }
 
   if (cleanPath === "/preview/portfolio" || cleanPath.startsWith("/preview/")) {
     return { 
       type: 'app', 
       appId: 'preview', 
-      config: { title: 'Portofolio Hadi 2026.pdf', pdfPath: '/Portofolio Hadi 2026.pdf' } 
+      config: { title: 'Portofolio Hadi 2026.pdf', pdfPath: '/Portofolio Hadi 2026.pdf' },
+      isMaximized
     };
   }
 
@@ -96,6 +110,7 @@ export function parseRoute(pathname: string): ParsedRoute {
       type: 'app',
       appId: 'finder',
       config: { initialPath: folderName },
+      isMaximized
     };
   }
 
@@ -104,6 +119,7 @@ export function parseRoute(pathname: string): ParsedRoute {
     return {
       type: 'app',
       appId,
+      isMaximized
     };
   }
 
@@ -114,6 +130,7 @@ export function parseRoute(pathname: string): ParsedRoute {
       type: 'app',
       appId: 'finder',
       config: { initialPath: FOLDER_MAP[directSlug] },
+      isMaximized
     };
   }
 
