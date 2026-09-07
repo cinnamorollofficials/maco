@@ -61,14 +61,14 @@ export const INITIAL_MOCK_FILES: Record<string, any[]> = {
 };
 
 export const APPS = [
-  { id: "launchpad", title: "Launchpad", icon: <img src="/macos_launchpad.png" className="w-12 h-12 object-contain" alt="Launchpad" draggable="false" />, color: "bg-white/10", category: "system" },
-  { id: "finder", title: "Finder", icon: <img src="/macos_finder_dark.webp" className="w-12 h-12 object-contain" alt="Finder" draggable="false" />, color: "bg-blue-500/10", category: "system" },
-  { id: "safari", title: "Safari", icon: <img src="/macos_safari.png" className="w-12 h-12 object-contain" alt="Safari" draggable="false" />, color: "bg-blue-500/20", category: "productivity" },
-  { id: "notes", title: "Notes", icon: <img src="/macos_notes.webp" className="w-12 h-12 object-contain" alt="Notes" draggable="false" />, color: "bg-yellow-100", category: "productivity" },
-  { id: "music", title: "Music", icon: <img src="/macos_music.webp" className="w-12 h-12 object-contain" alt="Music" draggable="false" />, color: "bg-pink-500/10", category: "media" },
-  { id: "preview", title: "Preview", icon: <img src="/macos_preview.webp" className="w-12 h-12 object-contain" alt="Preview" draggable="false" />, color: "bg-orange-500/10", category: "media" },
-  { id: "terminal", title: "Terminal", icon: <img src="/macos_terminal.webp" className="w-12 h-12 object-contain" alt="Terminal" draggable="false" />, color: "bg-black", category: "system_tools" },
-  { id: "trash", title: "Trash", icon: <img src="/trash_icon.png" className="w-12 h-12 object-contain" alt="Trash" draggable="false" />, color: "bg-white/10", category: "system" },
+  { id: "launchpad", title: "Launchpad", icon: <img src="/macos_launchpad.png?v=2" className="w-12 h-12 object-contain" alt="Launchpad" draggable="false" />, color: "bg-white/10", category: "system" },
+  { id: "finder", title: "Finder", icon: <img src="/macos_finder_dark.webp?v=2" className="w-12 h-12 object-contain" alt="Finder" draggable="false" />, color: "bg-blue-500/10", category: "system" },
+  { id: "safari", title: "Safari", icon: <img src="/macos_safari.png?v=2" className="w-12 h-12 object-contain" alt="Safari" draggable="false" />, color: "bg-blue-500/20", category: "productivity" },
+  { id: "notes", title: "Notes", icon: <img src="/macos_notes.webp?v=2" className="w-12 h-12 object-contain" alt="Notes" draggable="false" />, color: "bg-yellow-100", category: "productivity" },
+  { id: "music", title: "Music", icon: <img src="/macos_music.webp?v=2" className="w-12 h-12 object-contain" alt="Music" draggable="false" />, color: "bg-pink-500/10", category: "media" },
+  { id: "preview", title: "Preview", icon: <img src="/macos_preview.webp?v=2" className="w-12 h-12 object-contain" alt="Preview" draggable="false" />, color: "bg-orange-500/10", category: "media" },
+  { id: "terminal", title: "Terminal", icon: <img src="/macos_terminal.webp?v=2" className="w-12 h-12 object-contain" alt="Terminal" draggable="false" />, color: "bg-black", category: "system_tools" },
+  { id: "trash", title: "Trash", icon: <img src="/trash_icon.png?v=2" className="w-12 h-12 object-contain" alt="Trash" draggable="false" />, color: "bg-white/10", category: "system" },
   { id: "wallpaper_settings", title: "Wallpaper Settings", icon: <Monitor className="text-blue-400" />, color: "bg-blue-500/10", category: "system", hidden: true },
 ];
 
