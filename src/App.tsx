@@ -5,7 +5,7 @@ import { Folder, Trash2, FileText } from "lucide-react";
 // Types & Constants
 import { WindowState, DesktopItem, Note } from "./types";
 import { APPS, INITIAL_MOCK_FILES } from "./constants";
-import { getRouteForWindow, parseRoute } from "./utils/routes";
+import { getRouteForWindow, parseRoute, ParsedRoute } from "./utils/routes";
 
 // Core Components
 import BootScreen from "./components/BootScreen";
@@ -241,7 +241,7 @@ export default function App() {
     }
   };
 
-  const openApp = (appId: string, config?: any, isMaximized?: boolean) => {
+  const openApp = (appId: string, config?: any, isMaximized?: boolean, immediate = false) => {
     if (appId === 'launchpad') {
       setIsLaunchpadOpen(prev => !prev);
       return;
@@ -266,10 +266,11 @@ export default function App() {
         next.splice(existingIndex, 1);
         next.push({ 
           ...existingWindow, 
+          isOpen: true,
           isMinimized: false, 
           isMaximized: isMaximized !== undefined ? isMaximized : existingWindow.isMaximized,
           zIndex: maxZ + 1,
-          config: config || existingWindow.config 
+          config: config ? { ...existingWindow.config, ...config } : existingWindow.config 
         });
         return next;
       }
@@ -281,14 +282,23 @@ export default function App() {
       return;
     }
 
-    if (launchingApps.includes(appId)) return;
-
-    setLaunchingApps(prev => [...prev, appId]);
-    
-    setTimeout(() => {
+    const createWindow = () => {
       setWindows(prev => {
         const alreadyInPrev = prev.findIndex(w => w.id === windowId);
-        if (alreadyInPrev !== -1) return prev;
+        if (alreadyInPrev !== -1) {
+          const next = [...prev];
+          const existingWindow = next[alreadyInPrev];
+          next.splice(alreadyInPrev, 1);
+          next.push({
+            ...existingWindow,
+            isOpen: true,
+            isMinimized: false,
+            isMaximized: isMaximized !== undefined ? isMaximized : existingWindow.isMaximized,
+            zIndex: Math.max(...prev.map(w => w.zIndex), 0) + 1,
+            config: config ? { ...existingWindow.config, ...config } : existingWindow.config
+          });
+          return next;
+        }
 
         const maxZ = Math.max(...prev.map(w => w.zIndex), 0);
         const cascadeOffset = (prev.length % 8) * 30;
@@ -313,14 +323,54 @@ export default function App() {
       
       setActiveWindow(windowId);
       setLaunchingApps(prev => prev.filter(id => id !== appId));
-    }, 800);
+    };
+
+    if (immediate) {
+      createWindow();
+      return;
+    }
+
+    if (launchingApps.includes(appId)) return;
+
+    setLaunchingApps(prev => [...prev, appId]);
+    setTimeout(createWindow, 800);
   };
 
+  const initialRouteRef = useRef<ParsedRoute>(
+    parseRoute(
+      typeof window !== 'undefined' ? window.location.pathname : '/',
+      typeof window !== 'undefined' ? window.location.search : ''
+    )
+  );
   const initialRouteExecuted = useRef(false);
+
+  // Execute deep link route once booted
+  useEffect(() => {
+    if (isBooted && !initialRouteExecuted.current) {
+      initialRouteExecuted.current = true;
+      const initial = initialRouteRef.current;
+      if (initial.type === 'resume') {
+        setIsAccessibleViewOpen(true);
+      } else if (initial.type === 'app') {
+        openApp(initial.appId, initial.config, initial.isMaximized, true);
+      }
+    }
+  }, [isBooted]);
 
   // Synchronize browser URL with active window or accessible view
   useEffect(() => {
-    if (!isBooted) return;
+    if (!isBooted || !initialRouteExecuted.current) return;
+
+    // While an initial route app is loading, do not prematurely overwrite the deep link URL with '/'
+    if (initialRouteRef.current.type !== 'none' && !activeWindow && !isAccessibleViewOpen) {
+      return;
+    }
+
+    // Once we have an active window or accessible view, reset initial route ref
+    if (activeWindow || isAccessibleViewOpen) {
+      initialRouteRef.current = { type: 'none' };
+    }
+
     const targetUrl = getRouteForWindow(activeWindow, windows, isAccessibleViewOpen);
     const currentUrl = window.location.pathname + window.location.search;
     if (currentUrl !== targetUrl) {
@@ -332,19 +382,6 @@ export default function App() {
       }
     }
   }, [activeWindow, windows, isAccessibleViewOpen, isBooted]);
-
-  // Execute deep link route once booted
-  useEffect(() => {
-    if (isBooted && !initialRouteExecuted.current) {
-      initialRouteExecuted.current = true;
-      const parsed = parseRoute(window.location.pathname, window.location.search);
-      if (parsed.type === 'resume') {
-        setIsAccessibleViewOpen(true);
-      } else if (parsed.type === 'app') {
-        openApp(parsed.appId, parsed.config, parsed.isMaximized);
-      }
-    }
-  }, [isBooted]);
 
   // Handle browser Back / Forward buttons (popstate)
   useEffect(() => {
@@ -358,7 +395,7 @@ export default function App() {
         setIsAccessibleViewOpen(true);
       } else if (parsed.type === 'app') {
         setIsAccessibleViewOpen(false);
-        openApp(parsed.appId, parsed.config, parsed.isMaximized);
+        openApp(parsed.appId, parsed.config, parsed.isMaximized, true);
       }
     };
 

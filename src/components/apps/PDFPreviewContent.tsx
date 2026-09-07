@@ -431,6 +431,34 @@ const PDFPreviewContent: React.FC<PDFPreviewContentProps> = ({ app, onStateChang
     }
   }, [pdfDoc, initialPage]);
 
+  // Respond to prop updates (e.g. browser back/forward navigation)
+  useEffect(() => {
+    if (app?.config?.page && app.config.page !== currentPage) {
+      scrollToPage(app.config.page);
+    }
+  }, [app?.config?.page]);
+
+  useEffect(() => {
+    if (app?.config?.zoom) {
+      const targetScale = app.config.zoom / 100;
+      if (Math.abs(targetScale - scale) > 0.01) {
+        setScale(targetScale);
+      }
+    }
+  }, [app?.config?.zoom]);
+
+  useEffect(() => {
+    if (app?.config?.rotation !== undefined && app.config.rotation !== rotation) {
+      setRotation(app.config.rotation);
+    }
+  }, [app?.config?.rotation]);
+
+  useEffect(() => {
+    if (app?.config?.sidebar !== undefined && app.config.sidebar !== isSidebarOpen) {
+      setIsSidebarOpen(app.config.sidebar);
+    }
+  }, [app?.config?.sidebar]);
+
   // Synchronize state changes to localStorage and parent
   const isInitialMount = useRef(true);
   useEffect(() => {
