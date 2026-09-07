@@ -536,7 +536,12 @@ export default function App() {
       onMouseMove={handleSelectionMove}
       onMouseUp={handleSelectionEnd}
     >
-      <TopBar activeAppTitle={activeAppTitle} />
+      <TopBar 
+        activeAppTitle={activeAppTitle} 
+        onOpenSpotlight={() => setIsSpotlightOpen(true)}
+        onRestart={() => setIsBooted(false)}
+        onOpenApp={openApp}
+      />
 
       {/* Widgets Layer - Hidden on Mobile */}
       <div className="hidden md:flex absolute top-[60px] left-[60px] flex-col gap-6 pointer-events-none">
