@@ -195,6 +195,18 @@ const FinderContent: React.FC<FinderContentProps> = ({
               ))}
             </div>
             <div className="space-y-1">
+              <div className="text-[10px] font-bold text-white/30 uppercase px-2 mb-1.5 tracking-wider">Portfolio</div>
+              {["Project", "Experience", "Certificate"].map(item => (
+                <div 
+                  key={item} 
+                  onClick={() => navigateTo(item)}
+                  className={`px-2.5 py-1.5 rounded-lg text-[13px] cursor-default transition-all ${currentPath === item ? 'bg-blue-600/90 text-white shadow-sm' : 'text-white/70 hover:bg-white/5 hover:text-white'}`}
+                >
+                  {item}
+                </div>
+              ))}
+            </div>
+            <div className="space-y-1">
               <div className="text-[10px] font-bold text-white/30 uppercase px-2 mb-1.5 tracking-wider">iCloud</div>
               {["iCloud Drive"].map(item => (
                 <div 
@@ -247,15 +259,25 @@ const FinderContent: React.FC<FinderContentProps> = ({
                   } else {
                     const fileName = (file.name || file.label || "").toLowerCase();
                     if (fileName.endsWith('.pdf')) {
-                      onOpenApp('preview', { title: file.name || file.label, pdfPath: `/${file.name || file.label}` });
+                      onOpenApp('preview', { title: file.name || file.label, pdfPath: file.pdfPath || `/${file.name || file.label}` });
                     } else if (fileName.endsWith('.png') || fileName.endsWith('.jpg')) {
                       onOpenApp('image_preview');
+                    } else if (fileName.endsWith('.url')) {
+                      if (file.url) {
+                        window.open(file.url, '_blank');
+                      } else {
+                        onOpenApp('safari');
+                      }
+                    } else if (fileName.endsWith('.txt')) {
+                      onOpenApp('notes');
                     } else if (fileName === 'safari.app') {
                       onOpenApp('safari');
                     } else if (fileName === 'music.app') {
                       onOpenApp('music');
                     } else if (fileName === 'terminal.app') {
                       onOpenApp('terminal');
+                    } else if (fileName === 'notes.app') {
+                      onOpenApp('notes');
                     } else if (fileName === 'messages.app') {
                       onOpenApp('messages');
                     }

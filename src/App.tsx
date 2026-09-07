@@ -71,11 +71,11 @@ export default function App() {
   });
 
   const [finderFiles, setFinderFiles] = useState(() => {
-    // Migration: v3 clears all previous mock files to start with empty folders
+    // Migration: v4 loads rich portfolio mock files
     const version = localStorage.getItem('tahoe-v');
-    if (version !== '3') {
+    if (version !== '4') {
       localStorage.removeItem('tahoe-files');
-      localStorage.setItem('tahoe-v', '3');
+      localStorage.setItem('tahoe-v', '4');
     }
     
     const saved = localStorage.getItem('tahoe-files');

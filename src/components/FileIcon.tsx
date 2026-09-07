@@ -5,7 +5,11 @@ import {
   Compass, 
   Music, 
   Terminal, 
-  Settings 
+  Settings,
+  Globe,
+  Code,
+  Award,
+  Briefcase,
 } from "lucide-react";
 
 interface FileIconProps {
@@ -27,10 +31,20 @@ const FileIcon: React.FC<FileIconProps> = ({ icon }) => {
     switch (identifier) {
       case 'file-text':
         return <FileText className={color} />;
+      case 'pdf':
+        return <FileText className={color || 'text-red-400'} />;
       case 'image':
         return <ImageIcon className={color} />;
       case 'compass':
         return <Compass className={color} />;
+      case 'globe':
+        return <Globe className={color} />;
+      case 'code':
+        return <Code className={color} />;
+      case 'award':
+        return <Award className={color} />;
+      case 'briefcase':
+        return <Briefcase className={color} />;
       case 'music':
         return <Music className={color} />;
       case 'terminal':
