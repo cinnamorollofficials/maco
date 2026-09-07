@@ -643,6 +643,8 @@ export default function App() {
           isOpen={isSpotlightOpen} 
           onClose={() => setIsSpotlightOpen(false)} 
           apps={APPS} 
+          files={finderFiles}
+          notes={notes}
           onOpenApp={openApp} 
         />
       </React.Suspense>

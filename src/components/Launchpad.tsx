@@ -1,5 +1,6 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
+import { Search } from "lucide-react";
 
 interface LaunchpadProps {
   isOpen: boolean;
@@ -9,7 +10,17 @@ interface LaunchpadProps {
 }
 
 const Launchpad: React.FC<LaunchpadProps> = ({ isOpen, onClose, apps, onOpenApp }) => {
-  const displayApps = apps.filter(app => !app.hidden);
+  const [searchQuery, setSearchQuery] = useState("");
+
+  useEffect(() => {
+    if (isOpen) {
+      setSearchQuery("");
+    }
+  }, [isOpen]);
+
+  const displayApps = apps.filter(app => 
+    !app.hidden && app.title.toLowerCase().includes(searchQuery.trim().toLowerCase())
+  );
 
   return (
     <AnimatePresence>
@@ -18,9 +29,33 @@ const Launchpad: React.FC<LaunchpadProps> = ({ isOpen, onClose, apps, onOpenApp 
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="fixed inset-0 z-[4000] bg-[#1a1a1a]/40 backdrop-blur-[60px] flex flex-col items-center justify-start pt-20"
+          className="fixed inset-0 z-[4000] bg-[#1a1a1a]/40 backdrop-blur-[60px] flex flex-col items-center justify-start pt-24"
           onClick={onClose}
         >
+          {/* Interactive Search Bar */}
+          <div 
+            className="absolute top-8 w-[320px] h-9 bg-white/10 backdrop-blur-md rounded-xl flex items-center px-3 gap-2.5 border border-white/15 focus-within:border-white/30 focus-within:bg-white/15 transition-all shadow-lg"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <Search size={14} className="text-white/50 shrink-0" />
+            <input
+              type="text"
+              placeholder="Search"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="bg-transparent border-none outline-none text-white text-sm w-full placeholder:text-white/30"
+              autoFocus
+            />
+            {searchQuery && (
+              <button 
+                onClick={() => setSearchQuery("")}
+                className="text-white/40 hover:text-white text-xs px-1"
+              >
+                ✕
+              </button>
+            )}
+          </div>
+
           <motion.div 
             initial={{ scale: 1.1, opacity: 0, filter: 'blur(10px)' }}
             animate={{ scale: 1, opacity: 1, filter: 'blur(0px)' }}
@@ -53,13 +88,13 @@ const Launchpad: React.FC<LaunchpadProps> = ({ isOpen, onClose, apps, onOpenApp 
                 </motion.div>
               ))}
             </div>
-          </motion.div>
 
-          {/* Search bar decoration (non-functional, for aesthetics) */}
-          <div className="absolute top-10 w-[300px] h-8 bg-white/10 rounded-lg flex items-center px-3 gap-2 border border-white/10">
-            <div className="w-3 h-3 border-2 border-white/20 rounded-full" />
-            <span className="text-white/20 text-xs">Search</span>
-          </div>
+            {displayApps.length === 0 && (
+              <div className="text-center text-white/30 text-base mt-16">
+                No apps found for &ldquo;{searchQuery}&rdquo;
+              </div>
+            )}
+          </motion.div>
         </motion.div>
       )}
     </AnimatePresence>
