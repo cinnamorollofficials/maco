@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
-import { motion, AnimatePresence } from "motion/react";
+import { motion, AnimatePresence, useMotionValue } from "motion/react";
 import { Folder, Trash2, FileText } from "lucide-react";
 
 // Types & Constants
@@ -40,6 +40,7 @@ const WindowLoadingFallback = () => (
 );
 
 export default function App() {
+  const mouseX = useMotionValue(Infinity);
   const [isBooted, setIsBooted] = useState(false);
   const [windows, setWindows] = useState<WindowState[]>([]);
   const [activeWindow, setActiveWindow] = useState<string | null>(null);
@@ -834,6 +835,8 @@ export default function App() {
         onMouseDown={(e) => e.stopPropagation()}
       >
         <motion.div 
+          onMouseMove={(e) => mouseX.set(e.pageX)}
+          onMouseLeave={() => mouseX.set(Infinity)}
           className="tahoe-glass flex items-end gap-2 px-3.5 pt-2 pb-2.5 rounded-[26px] relative select-none"
         >
           {APPS.filter(app => !(app as any).hidden && app.id !== 'trash').map((app) => {
@@ -844,6 +847,7 @@ export default function App() {
               <DockIcon 
                 key={app.id}
                 app={app} 
+                mouseX={mouseX}
                 onClick={() => {
                   if (app.id === 'launchpad') {
                     setIsLaunchpadOpen(prev => !prev);
@@ -868,6 +872,7 @@ export default function App() {
               <DockIcon 
                 ref={trashRef}
                 app={APPS.find(a => a.id === 'trash')!} 
+                mouseX={mouseX}
                 onClick={() => {
                   if (trashWin) {
                     focusApp(trashWin.id);
