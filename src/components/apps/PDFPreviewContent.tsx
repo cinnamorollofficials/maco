@@ -120,6 +120,94 @@ const PDFPageItem: React.FC<PageItemProps> = ({ pdfDoc, pageNum, scale, rotation
   );
 };
 
+interface ThumbnailItemProps {
+  pdfDoc: any;
+  pageNum: number;
+  isActive: boolean;
+  onClick: () => void;
+}
+
+const PDFThumbnailItem: React.FC<ThumbnailItemProps> = ({
+  pdfDoc,
+  pageNum,
+  isActive,
+  onClick,
+}) => {
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const [isRendered, setIsRendered] = useState(false);
+
+  useEffect(() => {
+    if (!pdfDoc || !canvasRef.current) return;
+    let isMounted = true;
+
+    const renderThumbnail = async () => {
+      try {
+        const page = await pdfDoc.getPage(pageNum);
+        if (!isMounted || !canvasRef.current) return;
+
+        const unscaledViewport = page.getViewport({ scale: 1.0 });
+        const thumbScale = 110 / unscaledViewport.width;
+        const viewport = page.getViewport({ scale: thumbScale });
+
+        const canvas = canvasRef.current;
+        const context = canvas.getContext("2d");
+        if (!context) return;
+
+        const dpr = window.devicePixelRatio || 1;
+        canvas.width = Math.floor(viewport.width * dpr);
+        canvas.height = Math.floor(viewport.height * dpr);
+        canvas.style.width = `${Math.floor(viewport.width)}px`;
+        canvas.style.height = `${Math.floor(viewport.height)}px`;
+
+        context.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+        await page.render({
+          canvasContext: context,
+          viewport: viewport,
+        }).promise;
+
+        if (isMounted) setIsRendered(true);
+      } catch (err: any) {
+        // ignore cancel
+      }
+    };
+
+    renderThumbnail();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [pdfDoc, pageNum]);
+
+  return (
+    <button
+      onClick={onClick}
+      className={`group flex flex-col items-center p-2 rounded-lg transition-all text-center w-full ${
+        isActive
+          ? "bg-blue-600/20 text-white"
+          : "hover:bg-white/5 text-white/50 hover:text-white/80"
+      }`}
+      title={`Loncat ke Halaman ${pageNum}`}
+    >
+      <div
+        className={`relative bg-white rounded-xs shadow-md overflow-hidden transition-all duration-150 ${
+          isActive
+            ? "ring-2 ring-blue-500 shadow-blue-500/20"
+            : "group-hover:ring-1 group-hover:ring-white/20"
+        }`}
+      >
+        {!isRendered && (
+          <div className="w-[110px] h-[140px] bg-neutral-800 flex items-center justify-center">
+            <Loader2 size={16} className="animate-spin text-white/20" />
+          </div>
+        )}
+        <canvas ref={canvasRef} className="block" />
+      </div>
+      <span className="text-[11px] font-medium mt-1.5 font-mono">{pageNum}</span>
+    </button>
+  );
+};
+
 const PDFPreviewContent: React.FC<PDFPreviewContentProps> = ({ app }) => {
   const pdfPath = app?.config?.pdfPath || "/Portofolio Hadi 2026.pdf";
   const [pdfDoc, setPdfDoc] = useState<any>(null);
@@ -167,6 +255,10 @@ const PDFPreviewContent: React.FC<PDFPreviewContentProps> = ({ app }) => {
     setScale(1.0);
   };
 
+  const handleRotate = () => {
+    setRotation((prev) => (prev + 90) % 360);
+  };
+
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (["INPUT", "TEXTAREA"].includes((e.target as HTMLElement)?.tagName)) return;
@@ -181,12 +273,14 @@ const PDFPreviewContent: React.FC<PDFPreviewContentProps> = ({ app }) => {
         handleZoomOut();
       } else if (e.key === "0") {
         handleResetZoom();
+      } else if (e.key.toLowerCase() === "r" && !e.metaKey && !e.ctrlKey) {
+        handleRotate();
       }
     };
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [currentPage, numPages]);
+  }, [currentPage, numPages, scale, rotation]);
 
   useEffect(() => {
     let isCancelled = false;
@@ -236,7 +330,7 @@ const PDFPreviewContent: React.FC<PDFPreviewContentProps> = ({ app }) => {
               className={`p-1 rounded transition-colors ${
                 isSidebarOpen ? "bg-white/15 text-white" : "hover:bg-white/10 text-white/50"
               }`}
-              title="Toggle Sidebar"
+              title="Toggle Panel Thumbnail"
             >
               <Sidebar size={14} />
             </button>
@@ -319,20 +413,24 @@ const PDFPreviewContent: React.FC<PDFPreviewContentProps> = ({ app }) => {
               <ZoomIn size={14} />
             </button>
           </div>
-          <button className="p-1.5 hover:bg-white/10 rounded text-white/50" title="Putar">
+          <button
+            onClick={handleRotate}
+            className="p-1.5 hover:bg-white/10 rounded text-white/60 hover:text-white transition-colors"
+            title="Putar 90° Searah Jarum Jam (R)"
+          >
             <RotateCw size={14} />
           </button>
           {pdfPath && (
             <a
               href={pdfPath}
               download
-              className="p-1.5 hover:bg-white/10 rounded text-white/50 flex items-center"
+              className="p-1.5 hover:bg-white/10 rounded text-white/60 hover:text-white transition-colors flex items-center"
               title="Unduh PDF"
             >
               <Download size={14} />
             </a>
           )}
-          <button className="p-1.5 hover:bg-white/10 rounded text-white/50" title="Bagikan">
+          <button className="p-1.5 hover:bg-white/10 rounded text-white/50 hover:text-white transition-colors" title="Bagikan">
             <Share size={14} />
           </button>
         </div>
@@ -340,6 +438,26 @@ const PDFPreviewContent: React.FC<PDFPreviewContentProps> = ({ app }) => {
 
       {/* Main Body */}
       <div className="flex-1 flex overflow-hidden">
+        {/* Sidebar Drawer */}
+        {isSidebarOpen && pdfDoc && (
+          <aside className="w-40 bg-[#242424] border-r border-white/10 flex flex-col shrink-0 overflow-y-auto p-2 gap-2 select-none animate-in fade-in slide-in-from-left duration-150">
+            <div className="text-[10px] font-bold text-white/40 px-2 py-1 tracking-wider uppercase">
+              Thumbnail ({numPages})
+            </div>
+            <div className="flex flex-col gap-1.5">
+              {Array.from({ length: numPages }, (_, i) => i + 1).map((pageNum) => (
+                <PDFThumbnailItem
+                  key={pageNum}
+                  pdfDoc={pdfDoc}
+                  pageNum={pageNum}
+                  isActive={currentPage === pageNum}
+                  onClick={() => scrollToPage(pageNum)}
+                />
+              ))}
+            </div>
+          </aside>
+        )}
+
         {/* Document Pages Container */}
         <div
           ref={containerRef}
