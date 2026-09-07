@@ -16,6 +16,7 @@ import ContextMenu from "./components/ContextMenu";
 import CalendarWidget from "./components/CalendarWidget";
 import WeatherWidget from "./components/WeatherWidget";
 import HomeIndicator from "./components/HomeIndicator";
+import AccessibleViewModal from "./components/AccessibleViewModal";
 
 // Lazy-loaded App Contents & Overlays for Performance
 const FinderContent = React.lazy(() => import("./components/apps/FinderContent"));
@@ -43,6 +44,7 @@ export default function App() {
   const [activeWindow, setActiveWindow] = useState<string | null>(null);
   const [isSpotlightOpen, setIsSpotlightOpen] = useState(false);
   const [isLaunchpadOpen, setIsLaunchpadOpen] = useState(false);
+  const [isAccessibleViewOpen, setIsAccessibleViewOpen] = useState(false);
   const [launchingApps, setLaunchingApps] = useState<string[]>([]);
   const [wallpaper, setWallpaper] = useState(() => 
     localStorage.getItem('tahoe-wallpaper') || "https://512pixels.net/wp-content/uploads/2025/06/13-Ventura-Light-thumb.jpg"
@@ -541,6 +543,7 @@ export default function App() {
         onOpenSpotlight={() => setIsSpotlightOpen(true)}
         onRestart={() => setIsBooted(false)}
         onOpenApp={openApp}
+        onOpenAccessibleView={() => setIsAccessibleViewOpen(true)}
       />
 
       {/* Widgets Layer - Hidden on Mobile */}
@@ -743,6 +746,12 @@ export default function App() {
       </div>
       {/* Home Indicator for Mobile/Tablet */}
       <HomeIndicator onClick={goHome} />
+
+      {/* Accessible Classic Resume View */}
+      <AccessibleViewModal
+        isOpen={isAccessibleViewOpen}
+        onClose={() => setIsAccessibleViewOpen(false)}
+      />
     </div>
   </>
   );

@@ -11,7 +11,8 @@ import {
   X,
   Sparkles,
   Layers,
-  Laptop
+  Laptop,
+  FileText
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 
@@ -20,13 +21,15 @@ interface TopBarProps {
   onOpenSpotlight?: () => void;
   onRestart?: () => void;
   onOpenApp?: (appId: string) => void;
+  onOpenAccessibleView?: () => void;
 }
 
 const TopBar: React.FC<TopBarProps> = ({ 
   activeAppTitle = "Finder", 
   onOpenSpotlight,
   onRestart,
-  onOpenApp 
+  onOpenApp,
+  onOpenAccessibleView
 }) => {
   const [time, setTime] = useState(new Date());
   const [isAppleMenuOpen, setIsAppleMenuOpen] = useState(false);
@@ -126,6 +129,15 @@ const TopBar: React.FC<TopBarProps> = ({
                   >
                     App Store...
                   </button>
+                  <button
+                    onClick={() => {
+                      onOpenAccessibleView?.();
+                      setIsAppleMenuOpen(false);
+                    }}
+                    className="w-full text-left px-3.5 py-1 hover:bg-blue-600 rounded-md mx-auto block transition-colors text-blue-300 font-medium"
+                  >
+                    Classic Resume View...
+                  </button>
                   <div className="h-px bg-white/10 my-1 mx-3" />
                   <button
                     onClick={() => {
@@ -175,6 +187,15 @@ const TopBar: React.FC<TopBarProps> = ({
 
         {/* Right Section */}
         <div className="flex items-center gap-2 md:gap-3">
+          <button 
+            onClick={onOpenAccessibleView}
+            className="px-2 py-0.5 hover:bg-white/10 rounded transition-colors text-white/70 hover:text-white flex items-center gap-1.5 text-[11px]"
+            title="Switch to Accessible / Classic Resume View"
+          >
+            <FileText size={12} className="text-blue-400" />
+            <span className="hidden md:inline font-medium">Resume</span>
+          </button>
+
           <button 
             onClick={() => {
               onOpenSpotlight?.();
