@@ -270,6 +270,12 @@ export default function App() {
         if (alreadyInPrev !== -1) return prev;
 
         const maxZ = Math.max(...prev.map(w => w.zIndex), 0);
+        const cascadeOffset = (prev.length % 8) * 30;
+        const initialPosition = {
+          x: typeof window !== 'undefined' ? Math.min(Math.max(40, window.innerWidth - 720), 80 + cascadeOffset) : 100,
+          y: typeof window !== 'undefined' ? Math.min(Math.max(40, window.innerHeight - 500), 60 + cascadeOffset) : 80,
+        };
+
         return [...prev, { 
           id: windowId, 
           appId: appId,
@@ -278,7 +284,8 @@ export default function App() {
           isOpen: true, 
           isMinimized: false, 
           zIndex: maxZ + 1,
-          config 
+          config,
+          initialPosition 
         }];
       });
       

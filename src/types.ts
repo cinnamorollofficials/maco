@@ -9,6 +9,7 @@ export interface WindowState {
   isMinimized: boolean;
   zIndex: number;
   config?: any;
+  initialPosition?: { x: number; y: number };
 }
 
 export interface DesktopItem {
