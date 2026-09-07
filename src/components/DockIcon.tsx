@@ -1,5 +1,5 @@
 import React, { useState, useRef } from "react";
-import { motion, AnimatePresence, useTransform, useSpring, MotionValue, useMotionValue } from "motion/react";
+import { motion, AnimatePresence } from "motion/react";
 
 interface AppInfo {
   id: string;
@@ -14,10 +14,9 @@ interface DockIconProps {
   isOpen?: boolean;
   isMinimized?: boolean;
   isLaunching?: boolean;
-  mouseX?: MotionValue<number>;
 }
 
-const DockIcon = React.forwardRef<HTMLDivElement, DockIconProps>(({ app, onClick, isOpen, isMinimized, isLaunching, mouseX }, forwardedRef) => {
+const DockIcon = React.forwardRef<HTMLDivElement, DockIconProps>(({ app, onClick, isOpen, isMinimized, isLaunching }, forwardedRef) => {
   const rootRef = useRef<HTMLDivElement | null>(null);
   const [isHovered, setIsHovered] = useState(false);
 
@@ -30,23 +29,6 @@ const DockIcon = React.forwardRef<HTMLDivElement, DockIconProps>(({ app, onClick
       (forwardedRef as React.MutableRefObject<HTMLDivElement | null>).current = node;
     }
   };
-
-  const defaultMouseX = useMotionValue(Infinity);
-  const activeMouseX = mouseX || defaultMouseX;
-
-  // Calculate horizontal distance from cursor to icon center
-  const distance = useTransform(activeMouseX, (val: number) => {
-    const bounds = rootRef.current?.getBoundingClientRect() ?? { x: 0, width: 0 };
-    return val - bounds.x - bounds.width / 2;
-  });
-
-  // Smooth GPU scale transform (1.0 resting to 1.38 peak) - does NOT trigger layout shifts
-  const scaleSync = useTransform(distance, [-120, 0, 120], [1, 1.38, 1]);
-  const scale = useSpring(scaleSync, { mass: 0.1, stiffness: 260, damping: 18 });
-
-  // Lift icon upward out of dock as it magnifies
-  const yOffsetSync = useTransform(distance, [-120, 0, 120], [0, -10, 0]);
-  const yOffset = useSpring(yOffsetSync, { mass: 0.1, stiffness: 260, damping: 18 });
 
   return (
     <div ref={setRef} className="relative group w-12 h-12 flex flex-col items-center justify-end shrink-0">
@@ -71,24 +53,38 @@ const DockIcon = React.forwardRef<HTMLDivElement, DockIconProps>(({ app, onClick
 
       <motion.div
         style={{
-          scale,
-          y: isLaunching ? undefined : yOffset,
           transformOrigin: "bottom center",
         }}
-        animate={isLaunching ? {
-          y: [0, -18, 0],
-          transition: {
-            duration: 0.6,
-            repeat: Infinity,
-            repeatType: "loop",
-            ease: [0.4, 0, 0.2, 1],
-          }
-        } : undefined}
+        animate={
+          isLaunching
+            ? {
+                y: [0, -18, 0],
+                transition: {
+                  duration: 0.6,
+                  repeat: Infinity,
+                  repeatType: "loop",
+                  ease: [0.4, 0, 0.2, 1],
+                },
+              }
+            : isHovered
+            ? {
+                scale: 1.22,
+                y: -6,
+                opacity: 1,
+                transition: { type: "spring", stiffness: 380, damping: 24 },
+              }
+            : {
+                scale: isMinimized ? 0.92 : 1,
+                y: 0,
+                opacity: isMinimized ? 0.75 : 1,
+                transition: { type: "spring", stiffness: 380, damping: 24 },
+              }
+        }
         whileTap={{ scale: 0.92 }}
         onClick={onClick}
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
-        className={`w-12 h-12 bg-transparent flex items-center justify-center cursor-default ${isMinimized ? "opacity-70 scale-90" : ""}`}
+        className="w-12 h-12 bg-transparent flex items-center justify-center cursor-default"
       >
         <div className="w-full h-full flex items-center justify-center pointer-events-none drop-shadow-[0_8px_16px_rgba(0,0,0,0.35)]">
           {app.icon}
