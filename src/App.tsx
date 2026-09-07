@@ -181,6 +181,7 @@ export default function App() {
     switch (appId) {
       case 'terminal':
         return <TerminalContent files={finderFiles} isFocused={activeWindow === 'terminal'} />;
+      case 'safari':
       case 'chrome':
         return <SafariContent />;
       case 'notes':

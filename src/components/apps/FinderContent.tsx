@@ -251,7 +251,7 @@ const FinderContent: React.FC<FinderContentProps> = ({
                     } else if (fileName.endsWith('.png') || fileName.endsWith('.jpg')) {
                       onOpenApp('image_preview');
                     } else if (fileName === 'safari.app') {
-                      onOpenApp('chrome');
+                      onOpenApp('safari');
                     } else if (fileName === 'music.app') {
                       onOpenApp('music');
                     } else if (fileName === 'terminal.app') {
