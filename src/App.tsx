@@ -837,7 +837,7 @@ export default function App() {
         <motion.div 
           onMouseMove={(e) => mouseX.set(e.pageX)}
           onMouseLeave={() => mouseX.set(Infinity)}
-          className="tahoe-glass flex items-end gap-2 px-3.5 pt-2 pb-2.5 rounded-[26px] relative select-none"
+          className="tahoe-glass h-[64px] flex items-end gap-2.5 px-3.5 pb-2 rounded-[26px] relative select-none"
         >
           {APPS.filter(app => !(app as any).hidden && app.id !== 'trash').map((app) => {
             const targetWin = windows.find(w => w.appId === app.id || w.id === app.id);

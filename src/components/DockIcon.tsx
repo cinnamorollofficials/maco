@@ -40,20 +40,21 @@ const DockIcon = React.forwardRef<HTMLDivElement, DockIconProps>(({ app, onClick
     return val - bounds.x - bounds.width / 2;
   });
 
-  // Smooth magnification wave (resting 48px to peak 68px)
-  const sizeSync = useTransform(distance, [-120, 0, 120], [48, 68, 48]);
-  const size = useSpring(sizeSync, { mass: 0.1, stiffness: 260, damping: 18 });
+  // Smooth GPU scale transform (1.0 resting to 1.38 peak) - does NOT trigger layout shifts
+  const scaleSync = useTransform(distance, [-120, 0, 120], [1, 1.38, 1]);
+  const scale = useSpring(scaleSync, { mass: 0.1, stiffness: 260, damping: 18 });
 
-  const yOffsetSync = useTransform(distance, [-120, 0, 120], [0, -8, 0]);
+  // Lift icon upward out of dock as it magnifies
+  const yOffsetSync = useTransform(distance, [-120, 0, 120], [0, -10, 0]);
   const yOffset = useSpring(yOffsetSync, { mass: 0.1, stiffness: 260, damping: 18 });
 
   return (
-    <div ref={setRef} className="relative group flex flex-col items-center">
+    <div ref={setRef} className="relative group w-12 h-12 flex flex-col items-center justify-end shrink-0">
       <AnimatePresence>
         {isHovered && (
           <motion.div
             initial={{ opacity: 0, y: 4, scale: 0.95 }}
-            animate={{ opacity: 1, y: -10, scale: 1 }}
+            animate={{ opacity: 1, y: -12, scale: 1 }}
             exit={{ opacity: 0, y: 4, scale: 0.95 }}
             transition={{ duration: 0.12, ease: "easeOut" }}
             className="absolute -top-11 flex flex-col items-center z-50 pointer-events-none select-none"
@@ -70,9 +71,9 @@ const DockIcon = React.forwardRef<HTMLDivElement, DockIconProps>(({ app, onClick
 
       <motion.div
         style={{
-          width: size,
-          height: size,
+          scale,
           y: isLaunching ? undefined : yOffset,
+          transformOrigin: "bottom center",
         }}
         animate={isLaunching ? {
           y: [0, -18, 0],
@@ -87,7 +88,7 @@ const DockIcon = React.forwardRef<HTMLDivElement, DockIconProps>(({ app, onClick
         onClick={onClick}
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
-        className={`bg-transparent flex items-center justify-center cursor-default ${isMinimized ? "opacity-70 scale-90" : ""}`}
+        className={`w-12 h-12 bg-transparent flex items-center justify-center cursor-default ${isMinimized ? "opacity-70 scale-90" : ""}`}
       >
         <div className="w-full h-full flex items-center justify-center pointer-events-none drop-shadow-[0_8px_16px_rgba(0,0,0,0.35)]">
           {app.icon}
@@ -96,7 +97,7 @@ const DockIcon = React.forwardRef<HTMLDivElement, DockIconProps>(({ app, onClick
 
       {/* Activation Indicator Dot - Tahoe Style */}
       {isOpen && (
-        <div className="absolute -bottom-1 flex items-center justify-center w-full pointer-events-none">
+        <div className="absolute -bottom-1.5 flex items-center justify-center w-full pointer-events-none">
           <motion.div
             layoutId={`indicator-${app.id}`}
             className="w-[4.5px] h-[4.5px] bg-white/95 rounded-full shadow-[0_0_6px_rgba(255,255,255,0.9),0_0_2px_rgba(255,255,255,1)]"
