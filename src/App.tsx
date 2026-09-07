@@ -834,39 +834,31 @@ export default function App() {
         onMouseDown={(e) => e.stopPropagation()}
       >
         <motion.div 
-          className="tahoe-glass p-2 flex items-end gap-1 px-3 pb-2 rounded-[24px] relative overflow-x-auto no-scrollbar scroll-smooth"
+          className="tahoe-glass flex items-end gap-2 px-3.5 pt-2 pb-2.5 rounded-[26px] relative select-none"
         >
-          {APPS.filter(app => !(app as any).hidden).map((app, index) => {
-            const nextApp = APPS[index + 1];
-            const showDivider = nextApp && (app as any).category !== (nextApp as any).category;
+          {APPS.filter(app => !(app as any).hidden && app.id !== 'trash').map((app) => {
             const targetWin = windows.find(w => w.appId === app.id || w.id === app.id);
             const isOpen = !!targetWin;
             
             return (
-              <React.Fragment key={app.id}>
-                {app.id !== 'trash' && (
-                  <DockIcon 
-                    app={app} 
-                    onClick={() => {
-                      if (app.id === 'launchpad') {
-                        setIsLaunchpadOpen(prev => !prev);
-                        return;
-                      }
-                      if (targetWin) {
-                        focusApp(targetWin.id);
-                      } else {
-                        openApp(app.id);
-                      }
-                    }} 
-                    isOpen={isOpen}
-                    isMinimized={targetWin?.isMinimized}
-                    isLaunching={launchingApps.includes(app.id)}
-                  />
-                )}
-                {showDivider && app.id !== 'trash' && nextApp.id !== 'trash' && (
-                  <div className="tahoe-dock-divider" />
-                )}
-              </React.Fragment>
+              <DockIcon 
+                key={app.id}
+                app={app} 
+                onClick={() => {
+                  if (app.id === 'launchpad') {
+                    setIsLaunchpadOpen(prev => !prev);
+                    return;
+                  }
+                  if (targetWin) {
+                    focusApp(targetWin.id);
+                  } else {
+                    openApp(app.id);
+                  }
+                }} 
+                isOpen={isOpen}
+                isMinimized={targetWin?.isMinimized}
+                isLaunching={launchingApps.includes(app.id)}
+              />
             );
           })}
           <div className="tahoe-dock-divider" />
